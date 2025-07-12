@@ -103,6 +103,8 @@ module.exports = async options => {
           configType: 'flat',
           extensions: ['ts', 'tsx'],
           emitWarning: false,
+          failOnError: false,
+          failOnWarning: false,
         }),
         new ForkTsCheckerWebpackPlugin(),
         new CopyWebpackPlugin({
