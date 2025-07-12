@@ -26,7 +26,7 @@ a {
   box-sizing: border-box;
   .view-container {
     width: 100%;
-    height: calc(100% - 40px);
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 1rem;
@@ -35,6 +35,7 @@ a {
     }
     .view-routes {
       height: 100%;
+      width: 100%;
       > div {
         height: 100%;
       }
