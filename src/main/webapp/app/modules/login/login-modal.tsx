@@ -41,12 +41,11 @@ const LoginPage = (props: ILoginModalProps) => {
             ) : null}
             <ValidatedField
               name="username"
-              label={translate('global.form.username.label')}
-              placeholder={translate('global.form.username.placeholder')}
+              placeholder={'Login'}
               required
               autoFocus
               data-cy="username"
-              validate={{ required: 'Username cannot be empty!' }}
+              validate={{ required: 'Login não pode ser vazio!' }}
               register={register}
               error={errors.username as FieldError}
               isTouched={touchedFields.username}
@@ -54,11 +53,10 @@ const LoginPage = (props: ILoginModalProps) => {
             <ValidatedField
               name="password"
               type="password"
-              label={translate('login.form.password')}
-              placeholder={translate('login.form.password.placeholder')}
+              placeholder={'Senha'}
               required
               data-cy="password"
-              validate={{ required: 'Password cannot be empty!' }}
+              validate={{ required: 'Senha não pode ser vazia!' }}
               register={register}
               error={errors.password as FieldError}
               isTouched={touchedFields.password}
