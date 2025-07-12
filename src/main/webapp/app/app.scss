@@ -7,6 +7,11 @@ body {
   margin: 0;
 }
 
+html,
+body {
+  min-height: 100vh;
+}
+
 a {
   color: #533f03;
   font-weight: bold;
@@ -23,21 +28,28 @@ a {
 }
 
 .app-container {
-  box-sizing: border-box;
+  height: 100vh;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  padding-top: 60px;
+  overflow-y: auto;
+
   .view-container {
     width: 100%;
     height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 1rem;
-    .card {
-      padding: 1rem;
-    }
+    padding: 0;
+    flex: 1 1 auto;
+
     .view-routes {
       height: 100%;
-      width: 100%;
       > div {
         height: 100%;
+        width: 100%;
       }
     }
   }
