@@ -1,0 +1,126 @@
+// Configurações
+paginate all with pagination
+filter all
+dto all with mapstruct
+
+entity Doadora {
+    nome String required
+    cartaoSUS String unique
+    cpf String required unique
+    dataNascimento LocalDate required
+    cep String required
+    estado String required
+    cidade String required
+    endereco String required
+    telefone String required
+    profissao String
+    tipoDoadora TipoDoadora required
+    localPreNatal LocalPreNatal
+    resultadoVDRL ResultadoExame
+    resultadoHBsAg ResultadoExame
+    resultadoFTAabs ResultadoExame
+    resultadoHIV ResultadoExame
+    transfusaoUltimos5Anos Boolean
+    dataRegistro LocalDate required
+}
+
+entity Paciente {
+    nome String required
+    registroHospitalar String required unique
+    dataNascimento LocalDate required
+    pesoNascimento Double
+    idadeGestacional Integer
+    condicaoClinica String required
+    nomeResponsavel String required
+    cpfResponsavel String required
+    telefoneResponsavel String required
+    parentescoResponsavel String required
+    statusAtivo Boolean required
+}
+
+entity Coleta {
+    dataColeta LocalDate required
+    volumeMl Double required
+    temperatura Double required
+    localColeta String
+    observacoes String
+    statusColeta StatusColeta required
+}
+
+entity Processamento {
+    dataProcessamento LocalDate required
+    tecnicoResponsavel String required
+    valorAcidezDornic Double
+    valorCaloricoKcal Double
+    resultadoAnalise ResultadoAnalise required
+    statusProcessamento StatusProcessamento required
+}
+
+entity Estoque {
+    dataProducao LocalDate required
+    dataValidade LocalDate required
+    tipoLeite TipoLeite required
+    classificacao ClassificacaoLeite required
+    volumeTotalMl Double required
+    volumeDisponivelMl Double required
+    localArmazenamento String required
+    temperaturaArmazenamento Double required
+    statusLote StatusLote required
+}
+
+entity Distribuicao {
+    dataDistribuicao LocalDate required
+    volumeDistribuidoMl Double required
+    responsavelEntrega String required
+    responsavelRecebimento String required
+    observacoes String
+}
+
+// RELACIONAMENTOS
+relationship OneToMany {
+    Doadora{coletas} to Coleta{doadora required}
+    Estoque{distribuicoes} to Distribuicao{estoque required}
+    Paciente{distribuicoes} to Distribuicao{paciente required}
+}
+
+relationship OneToOne {
+    Coleta{processamento} to Processamento{coleta required}
+    Processamento{estoque} to Estoque{processamento required}
+}
+
+// Enums
+enum StatusColeta {
+    AGUARDANDO_PROCESSAMENTO, PROCESSADA, CANCELADA
+}
+
+enum StatusProcessamento {
+    EM_ANALISE, CONCLUIDO, REJEITADO
+}
+
+enum ResultadoAnalise {
+    APROVADO, REPROVADO
+}
+
+enum StatusLote {
+    DISPONIVEL, RESERVADO, DISTRIBUIDO, EXPIRADO
+}
+
+enum TipoLeite {
+    COLOSTRO, TRANSICAO, MADURO
+}
+
+enum ClassificacaoLeite {
+    A, B, C
+}
+
+enum TipoDoadora {
+    DOMICILIAR, EXCLUSIVA, EVENTUAL
+}
+
+enum LocalPreNatal {
+    REDE_PUBLICA, REDE_PRIVADA, NAO_REALIZADO
+}
+
+enum ResultadoExame {
+    POSITIVO, NEGATIVO, NAO_INFORMADO
+}
