@@ -1,0 +1,9 @@
+export enum StatusLote {
+  DISPONIVEL = 'DISPONIVEL',
+
+  RESERVADO = 'RESERVADO',
+
+  DISTRIBUIDO = 'DISTRIBUIDO',
+
+  EXPIRADO = 'EXPIRADO',
+}

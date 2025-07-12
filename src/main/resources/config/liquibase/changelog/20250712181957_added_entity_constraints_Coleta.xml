@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+                        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+    <!--
+        Added the constraints for entity Coleta.
+    -->
+    <changeSet id="20250712181957-2" author="jhipster">
+
+        <addForeignKeyConstraint baseColumnNames="processamento_id"
+                                 baseTableName="coleta"
+                                 constraintName="fk_coleta__processamento_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="processamento"
+                                 />
+
+        <addForeignKeyConstraint baseColumnNames="doadora_id"
+                                 baseTableName="coleta"
+                                 constraintName="fk_coleta__doadora_id"
+                                 referencedColumnNames="id"
+                                 referencedTableName="doadora"
+                                 />
+    </changeSet>
+</databaseChangeLog>

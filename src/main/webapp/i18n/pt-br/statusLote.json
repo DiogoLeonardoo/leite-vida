@@ -1,0 +1,11 @@
+{
+  "leiteVidaApp": {
+    "StatusLote": {
+      "null": "",
+      "DISPONIVEL": "DISPONIVEL",
+      "RESERVADO": "RESERVADO",
+      "DISTRIBUIDO": "DISTRIBUIDO",
+      "EXPIRADO": "EXPIRADO"
+    }
+  }
+}

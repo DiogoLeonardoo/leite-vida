@@ -1,0 +1,30 @@
+{
+  "leiteVidaApp": {
+    "distribuicao": {
+      "home": {
+        "title": "Distribuicaos",
+        "refreshListLabel": "Atualizar lista",
+        "createLabel": "Criar novo Distribuicao",
+        "createOrEditLabel": "Criar ou editar Distribuicao",
+        "notFound": "Nenhum Distribuicao encontrado"
+      },
+      "created": "Um novo Distribuicao foi criado com o identificador {{ param }}",
+      "updated": "Um Distribuicao foi atualizado com o identificador {{ param }}",
+      "deleted": "Um Distribuicao foi excluído com o identificador {{ param }}",
+      "delete": {
+        "question": "Tem certeza de que deseja excluir Distribuicao {{ id }}?"
+      },
+      "detail": {
+        "title": "Distribuicao"
+      },
+      "id": "ID",
+      "dataDistribuicao": "Data Distribuicao",
+      "volumeDistribuidoMl": "Volume Distribuido Ml",
+      "responsavelEntrega": "Responsavel Entrega",
+      "responsavelRecebimento": "Responsavel Recebimento",
+      "observacoes": "Observacoes",
+      "estoque": "Estoque",
+      "paciente": "Paciente"
+    }
+  }
+}

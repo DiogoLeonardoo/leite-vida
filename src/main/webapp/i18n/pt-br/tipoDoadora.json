@@ -1,0 +1,10 @@
+{
+  "leiteVidaApp": {
+    "TipoDoadora": {
+      "null": "",
+      "DOMICILIAR": "DOMICILIAR",
+      "EXCLUSIVA": "EXCLUSIVA",
+      "EVENTUAL": "EVENTUAL"
+    }
+  }
+}

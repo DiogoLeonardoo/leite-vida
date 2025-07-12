@@ -1,0 +1,7 @@
+export enum LocalPreNatal {
+  REDE_PUBLICA = 'REDE_PUBLICA',
+
+  REDE_PRIVADA = 'REDE_PRIVADA',
+
+  NAO_REALIZADO = 'NAO_REALIZADO',
+}

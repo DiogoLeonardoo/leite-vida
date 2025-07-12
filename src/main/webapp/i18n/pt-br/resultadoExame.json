@@ -1,0 +1,10 @@
+{
+  "leiteVidaApp": {
+    "ResultadoExame": {
+      "null": "",
+      "POSITIVO": "POSITIVO",
+      "NEGATIVO": "NEGATIVO",
+      "NAO_INFORMADO": "NAO_INFORMADO"
+    }
+  }
+}

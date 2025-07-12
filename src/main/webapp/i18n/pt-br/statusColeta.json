@@ -1,0 +1,10 @@
+{
+  "leiteVidaApp": {
+    "StatusColeta": {
+      "null": "",
+      "AGUARDANDO_PROCESSAMENTO": "AGUARDANDO_PROCESSAMENTO",
+      "PROCESSADA": "PROCESSADA",
+      "CANCELADA": "CANCELADA"
+    }
+  }
+}

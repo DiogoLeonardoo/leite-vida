@@ -1,0 +1,31 @@
+{
+  "leiteVidaApp": {
+    "coleta": {
+      "home": {
+        "title": "Coletas",
+        "refreshListLabel": "Atualizar lista",
+        "createLabel": "Criar novo Coleta",
+        "createOrEditLabel": "Criar ou editar Coleta",
+        "notFound": "Nenhum Coleta encontrado"
+      },
+      "created": "Um novo Coleta foi criado com o identificador {{ param }}",
+      "updated": "Um Coleta foi atualizado com o identificador {{ param }}",
+      "deleted": "Um Coleta foi excluído com o identificador {{ param }}",
+      "delete": {
+        "question": "Tem certeza de que deseja excluir Coleta {{ id }}?"
+      },
+      "detail": {
+        "title": "Coleta"
+      },
+      "id": "ID",
+      "dataColeta": "Data Coleta",
+      "volumeMl": "Volume Ml",
+      "temperatura": "Temperatura",
+      "localColeta": "Local Coleta",
+      "observacoes": "Observacoes",
+      "statusColeta": "Status Coleta",
+      "processamento": "Processamento",
+      "doadora": "Doadora"
+    }
+  }
+}

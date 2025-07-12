@@ -1,0 +1,7 @@
+export enum TipoDoadora {
+  DOMICILIAR = 'DOMICILIAR',
+
+  EXCLUSIVA = 'EXCLUSIVA',
+
+  EVENTUAL = 'EVENTUAL',
+}

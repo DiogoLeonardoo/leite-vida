@@ -1,0 +1,79 @@
+{
+  "annotations": {
+    "changelogDate": "20250712181959"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "dataProducao",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "dataValidade",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "tipoLeite",
+      "fieldType": "TipoLeite",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "COLOSTRO,TRANSICAO,MADURO"
+    },
+    {
+      "fieldName": "classificacao",
+      "fieldType": "ClassificacaoLeite",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "A,B,C"
+    },
+    {
+      "fieldName": "volumeTotalMl",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "volumeDisponivelMl",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "localArmazenamento",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "temperaturaArmazenamento",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "statusLote",
+      "fieldType": "StatusLote",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "DISPONIVEL,RESERVADO,DISTRIBUIDO,EXPIRADO"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Estoque",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "distribuicao",
+      "otherEntityRelationshipName": "estoque",
+      "relationshipName": "distribuicoes",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    },
+    {
+      "otherEntityName": "processamento",
+      "otherEntityRelationshipName": "estoque",
+      "relationshipName": "processamento",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

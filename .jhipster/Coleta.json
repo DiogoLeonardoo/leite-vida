@@ -1,0 +1,60 @@
+{
+  "annotations": {
+    "changelogDate": "20250712181957"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "dataColeta",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "volumeMl",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "temperatura",
+      "fieldType": "Double",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "localColeta",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "observacoes",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "statusColeta",
+      "fieldType": "StatusColeta",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "AGUARDANDO_PROCESSAMENTO,PROCESSADA,CANCELADA"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Coleta",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "processamento",
+      "otherEntityRelationshipName": "coleta",
+      "relationshipName": "processamento",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "doadora",
+      "otherEntityRelationshipName": "coletas",
+      "relationshipName": "doadora",
+      "relationshipSide": "right",
+      "relationshipType": "many-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

@@ -1,0 +1,10 @@
+{
+  "leiteVidaApp": {
+    "TipoLeite": {
+      "null": "",
+      "COLOSTRO": "COLOSTRO",
+      "TRANSICAO": "TRANSICAO",
+      "MADURO": "MADURO"
+    }
+  }
+}

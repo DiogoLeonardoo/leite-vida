@@ -1,0 +1,42 @@
+{
+  "leiteVidaApp": {
+    "doadora": {
+      "home": {
+        "title": "Doadoras",
+        "refreshListLabel": "Atualizar lista",
+        "createLabel": "Criar novo Doadora",
+        "createOrEditLabel": "Criar ou editar Doadora",
+        "notFound": "Nenhum Doadora encontrado"
+      },
+      "created": "Um novo Doadora foi criado com o identificador {{ param }}",
+      "updated": "Um Doadora foi atualizado com o identificador {{ param }}",
+      "deleted": "Um Doadora foi excluído com o identificador {{ param }}",
+      "delete": {
+        "question": "Tem certeza de que deseja excluir Doadora {{ id }}?"
+      },
+      "detail": {
+        "title": "Doadora"
+      },
+      "id": "ID",
+      "nome": "Nome",
+      "cartaoSUS": "Cartao SUS",
+      "cpf": "Cpf",
+      "dataNascimento": "Data Nascimento",
+      "cep": "Cep",
+      "estado": "Estado",
+      "cidade": "Cidade",
+      "endereco": "Endereco",
+      "telefone": "Telefone",
+      "profissao": "Profissao",
+      "tipoDoadora": "Tipo Doadora",
+      "localPreNatal": "Local Pre Natal",
+      "resultadoVDRL": "Resultado VDRL",
+      "resultadoHBsAg": "Resultado H Bs Ag",
+      "resultadoFTAabs": "Resultado FT Aabs",
+      "resultadoHIV": "Resultado HIV",
+      "transfusaoUltimos5Anos": "Transfusao Ultimos 5 Anos",
+      "dataRegistro": "Data Registro",
+      "coletas": "Coletas"
+    }
+  }
+}

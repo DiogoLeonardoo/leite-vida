@@ -1,0 +1,10 @@
+{
+  "leiteVidaApp": {
+    "StatusProcessamento": {
+      "null": "",
+      "EM_ANALISE": "EM_ANALISE",
+      "CONCLUIDO": "CONCLUIDO",
+      "REJEITADO": "REJEITADO"
+    }
+  }
+}

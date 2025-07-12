@@ -1,0 +1,112 @@
+{
+  "annotations": {
+    "changelogDate": "20250712181955"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "nome",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "cartaoSUS",
+      "fieldType": "String",
+      "fieldValidateRules": ["unique"]
+    },
+    {
+      "fieldName": "cpf",
+      "fieldType": "String",
+      "fieldValidateRules": ["required", "unique"]
+    },
+    {
+      "fieldName": "dataNascimento",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "cep",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "estado",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "cidade",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "endereco",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "telefone",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "profissao",
+      "fieldType": "String"
+    },
+    {
+      "fieldName": "tipoDoadora",
+      "fieldType": "TipoDoadora",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "DOMICILIAR,EXCLUSIVA,EVENTUAL"
+    },
+    {
+      "fieldName": "localPreNatal",
+      "fieldType": "LocalPreNatal",
+      "fieldValues": "REDE_PUBLICA,REDE_PRIVADA,NAO_REALIZADO"
+    },
+    {
+      "fieldName": "resultadoVDRL",
+      "fieldType": "ResultadoExame",
+      "fieldValues": "POSITIVO,NEGATIVO,NAO_INFORMADO"
+    },
+    {
+      "fieldName": "resultadoHBsAg",
+      "fieldType": "ResultadoExame",
+      "fieldValues": "POSITIVO,NEGATIVO,NAO_INFORMADO"
+    },
+    {
+      "fieldName": "resultadoFTAabs",
+      "fieldType": "ResultadoExame",
+      "fieldValues": "POSITIVO,NEGATIVO,NAO_INFORMADO"
+    },
+    {
+      "fieldName": "resultadoHIV",
+      "fieldType": "ResultadoExame",
+      "fieldValues": "POSITIVO,NEGATIVO,NAO_INFORMADO"
+    },
+    {
+      "fieldName": "transfusaoUltimos5Anos",
+      "fieldType": "Boolean"
+    },
+    {
+      "fieldName": "dataRegistro",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Doadora",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "coleta",
+      "otherEntityRelationshipName": "doadora",
+      "relationshipName": "coletas",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-many"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}

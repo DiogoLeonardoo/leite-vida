@@ -1,0 +1,31 @@
+{
+  "leiteVidaApp": {
+    "processamento": {
+      "home": {
+        "title": "Processamentos",
+        "refreshListLabel": "Atualizar lista",
+        "createLabel": "Criar novo Processamento",
+        "createOrEditLabel": "Criar ou editar Processamento",
+        "notFound": "Nenhum Processamento encontrado"
+      },
+      "created": "Um novo Processamento foi criado com o identificador {{ param }}",
+      "updated": "Um Processamento foi atualizado com o identificador {{ param }}",
+      "deleted": "Um Processamento foi excluído com o identificador {{ param }}",
+      "delete": {
+        "question": "Tem certeza de que deseja excluir Processamento {{ id }}?"
+      },
+      "detail": {
+        "title": "Processamento"
+      },
+      "id": "ID",
+      "dataProcessamento": "Data Processamento",
+      "tecnicoResponsavel": "Tecnico Responsavel",
+      "valorAcidezDornic": "Valor Acidez Dornic",
+      "valorCaloricoKcal": "Valor Calorico Kcal",
+      "resultadoAnalise": "Resultado Analise",
+      "statusProcessamento": "Status Processamento",
+      "estoque": "Estoque",
+      "coleta": "Coleta"
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "annotations": {
+    "changelogDate": "20250712181958"
+  },
+  "applications": "*",
+  "dto": "mapstruct",
+  "fields": [
+    {
+      "fieldName": "dataProcessamento",
+      "fieldType": "LocalDate",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "tecnicoResponsavel",
+      "fieldType": "String",
+      "fieldValidateRules": ["required"]
+    },
+    {
+      "fieldName": "valorAcidezDornic",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "valorCaloricoKcal",
+      "fieldType": "Double"
+    },
+    {
+      "fieldName": "resultadoAnalise",
+      "fieldType": "ResultadoAnalise",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "APROVADO,REPROVADO"
+    },
+    {
+      "fieldName": "statusProcessamento",
+      "fieldType": "StatusProcessamento",
+      "fieldValidateRules": ["required"],
+      "fieldValues": "EM_ANALISE,CONCLUIDO,REJEITADO"
+    }
+  ],
+  "jpaMetamodelFiltering": true,
+  "name": "Processamento",
+  "pagination": "pagination",
+  "relationships": [
+    {
+      "otherEntityName": "estoque",
+      "otherEntityRelationshipName": "processamento",
+      "relationshipName": "estoque",
+      "relationshipSide": "left",
+      "relationshipType": "one-to-one"
+    },
+    {
+      "otherEntityName": "coleta",
+      "otherEntityRelationshipName": "processamento",
+      "relationshipName": "coleta",
+      "relationshipSide": "right",
+      "relationshipType": "one-to-one",
+      "relationshipValidateRules": "required"
+    }
+  ],
+  "searchEngine": "no",
+  "service": "serviceClass"
+}
