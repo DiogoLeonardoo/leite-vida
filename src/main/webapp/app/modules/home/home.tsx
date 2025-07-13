@@ -1,9 +1,5 @@
-import './home.scss';
-
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Translate } from 'react-jhipster';
-import { Alert, Col, Row } from 'reactstrap';
+import { Alert, Badge, Button, Card, CardBody, Col, Container, Row } from 'reactstrap';
 
 import { useAppSelector } from 'app/config/store';
 
@@ -11,89 +7,280 @@ export const Home = () => {
   const account = useAppSelector(state => state.authentication.account);
 
   return (
-    <Row>
-      <Col md="3" className="pad">
-        <span className="hipster rounded" />
-      </Col>
-      <Col md="9">
-        <h1 className="display-4">
-          <Translate contentKey="home.title">Welcome, Java Hipster!</Translate>
-        </h1>
-        <p className="lead">
-          <Translate contentKey="home.subtitle">This is your homepage</Translate>
-        </p>
-        {account?.login ? (
-          <div>
-            <Alert color="success">
-              <Translate contentKey="home.logged.message" interpolate={{ username: account.login }}>
-                You are logged in as user {account.login}.
-              </Translate>
-            </Alert>
-          </div>
-        ) : (
-          <div>
-            <Alert color="warning">
-              <Translate contentKey="global.messages.info.authenticated.prefix">If you want to </Translate>
+    <div
+      style={{
+        background: 'linear-gradient(135deg, #FFF5E1 0%, #FFE4B5 50%, #FFEAA7 100%)',
+        paddingTop: '1.5rem',
+        paddingBottom: '1.5rem',
+      }}
+    >
+      <Container>
+        {/* Header Compacto */}
+        <Row className="justify-content-center mb-4">
+          <Col md="8" lg="6">
+            <div className="d-flex align-items-center justify-content-center mb-2">
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <img
+                  src="content/images/home-logo.svg"
+                  alt="Leite Vida Logo"
+                  style={{
+                    width: '50%',
+                    height: 'auto',
+                    objectFit: 'contain',
+                  }}
+                />
+              </div>
+            </div>
+          </Col>
+        </Row>
 
-              <Link to="/login" className="alert-link">
-                <Translate contentKey="global.messages.info.authenticated.link"> sign in</Translate>
-              </Link>
-              <Translate contentKey="global.messages.info.authenticated.suffix">
-                , you can try the default accounts:
-                <br />- Administrator (login=&quot;admin&quot; and password=&quot;admin&quot;)
-                <br />- User (login=&quot;user&quot; and password=&quot;user&quot;).
-              </Translate>
-            </Alert>
+        {/* Stats Cards Compactas */}
+        <Row className="mb-4">
+          <Col md="4" className="mb-3">
+            <Card
+              className="shadow-sm border-0"
+              style={{
+                borderRadius: '15px',
+              }}
+            >
+              <CardBody className="p-3">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <Badge color="secondary" className="mb-1" style={{ fontSize: '0.7rem' }}>
+                      DOADORAS ATIVAS
+                    </Badge>
+                    <h3 className="h1 font-weight-bold mb-0 text-dark">230</h3>
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: '#e9ecef',
+                      width: '45px',
+                      height: '45px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.2rem',
+                    }}
+                  >
+                    👥
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
 
-            <Alert color="warning">
-              <Translate contentKey="global.messages.info.register.noaccount">You do not have an account yet?</Translate>&nbsp;
-              <Link to="/account/register" className="alert-link">
-                <Translate contentKey="global.messages.info.register.link">Register a new account</Translate>
-              </Link>
-            </Alert>
-          </div>
-        )}
-        <p>
-          <Translate contentKey="home.question">If you have any question on JHipster:</Translate>
-        </p>
+          <Col md="4" className="mb-3">
+            <Card
+              className="shadow-sm border-0"
+              style={{
+                borderRadius: '15px',
+                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              }}
+            >
+              <CardBody className="p-3 text-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <Badge color="light" className="mb-1 text-success" style={{ fontSize: '0.7rem' }}>
+                      ESTOQUE
+                    </Badge>
+                    <h3 className="h1 font-weight-bold mb-0">
+                      2300<small className="h5">mL</small>
+                    </h3>
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      width: '45px',
+                      height: '45px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.2rem',
+                    }}
+                  >
+                    📦
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
 
-        <ul>
-          <li>
-            <a href="https://www.jhipster.tech/" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.homepage">JHipster homepage</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://stackoverflow.com/tags/jhipster/info" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.stackoverflow">JHipster on Stack Overflow</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/jhipster/generator-jhipster/issues?state=open" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.bugtracker">JHipster bug tracker</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://gitter.im/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.chat">JHipster public chat room</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://twitter.com/jhipster" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.follow">follow @jhipster on Twitter</Translate>
-            </a>
-          </li>
-        </ul>
+          <Col md="4" className="mb-3">
+            <Card
+              className="shadow-sm border-0"
+              style={{
+                borderRadius: '15px',
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+              }}
+            >
+              <CardBody className="p-3">
+                <div className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <Badge color="warning" className="mb-1" style={{ fontSize: '0.7rem' }}>
+                      PROCESSAMENTO
+                    </Badge>
+                    <h3 className="h1 font-weight-bold mb-0 text-dark">
+                      230<small className="h5">mL</small>
+                    </h3>
+                  </div>
+                  <div
+                    style={{
+                      backgroundColor: '#fff3cd',
+                      width: '45px',
+                      height: '45px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.2rem',
+                    }}
+                  >
+                    🧪
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
 
-        <p>
-          <Translate contentKey="home.like">If you like JHipster, do not forget to give us a star on</Translate>{' '}
-          <a href="https://github.com/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">
-            GitHub
-          </a>
-          !
-        </p>
-      </Col>
-    </Row>
+        {/* Action Buttons Principais */}
+        <Row className="mb-4">
+          <Col lg="4" md="6" className="mb-3">
+            <Button
+              color="dark"
+              size="lg"
+              block
+              className="d-flex justify-content-between align-items-center"
+              style={{
+                minHeight: '80px',
+                borderRadius: '15px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #343a40 0%, #495057 100%)',
+              }}
+            >
+              <div className="text-left">
+                <h5 className="mb-0 font-weight-bold">Nova Coleta</h5>
+                <small className="text-light">Registrar coleta</small>
+              </div>
+              <span style={{ fontSize: '1.5rem' }}>➕</span>
+            </Button>
+          </Col>
+
+          <Col lg="4" md="6" className="mb-3">
+            <Button
+              color="success"
+              size="lg"
+              block
+              className="d-flex justify-content-between align-items-center"
+              style={{
+                minHeight: '80px',
+                borderRadius: '15px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #28a745 0%, #20c997 100%)',
+              }}
+            >
+              <div className="text-left">
+                <h5 className="mb-0 font-weight-bold">Nova Doadora</h5>
+                <small className="text-light">Cadastrar doadora</small>
+              </div>
+              <span style={{ fontSize: '1.5rem' }}>👤</span>
+            </Button>
+          </Col>
+
+          <Col lg="4" md="6" className="mb-3">
+            <Button
+              color="primary"
+              size="lg"
+              block
+              className="d-flex justify-content-between align-items-center"
+              style={{
+                minHeight: '80px',
+                borderRadius: '15px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #007bff 0%, #0056b3 100%)',
+              }}
+            >
+              <div className="text-left">
+                <h5 className="mb-0 font-weight-bold">Novo Paciente</h5>
+                <small className="text-light">Cadastrar paciente</small>
+              </div>
+              <span style={{ fontSize: '1.5rem' }}>👶</span>
+            </Button>
+          </Col>
+        </Row>
+
+        {/* Secondary Actions Compactas */}
+        <Row>
+          <Col lg="4" md="6" className="mb-3">
+            <Button
+              color="light"
+              size="md"
+              block
+              className="d-flex justify-content-between align-items-center text-dark"
+              style={{
+                minHeight: '60px',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                border: '2px solid #e9ecef',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}
+            >
+              <div className="text-left">
+                <h6 className="mb-0 font-weight-bold">Consultar Estoque</h6>
+                <small className="text-muted">Verificar disponibilidade</small>
+              </div>
+              <span style={{ fontSize: '1.2rem', color: '#28a745' }}>🔍</span>
+            </Button>
+          </Col>
+
+          <Col lg="4" md="6" className="mb-3">
+            <Button
+              color="light"
+              size="md"
+              block
+              className="d-flex justify-content-between align-items-center text-dark"
+              style={{
+                minHeight: '60px',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                border: '2px solid #e9ecef',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}
+            >
+              <div className="text-left">
+                <h6 className="mb-0 font-weight-bold">Usuários</h6>
+                <small className="text-muted">Gerenciar usuários</small>
+              </div>
+              <span style={{ fontSize: '1.2rem', color: '#6c757d' }}>👥</span>
+            </Button>
+          </Col>
+
+          <Col lg="4" md="6" className="mb-3">
+            <Button
+              color="light"
+              size="md"
+              block
+              className="d-flex justify-content-between align-items-center text-dark"
+              style={{
+                minHeight: '60px',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                border: '2px solid #e9ecef',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+              }}
+            >
+              <div className="text-left">
+                <h6 className="mb-0 font-weight-bold">Nova Distribuição</h6>
+                <small className="text-muted">Realizar distribuição</small>
+              </div>
+              <span style={{ fontSize: '1.2rem', color: '#28a745' }}>📊</span>
+            </Button>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   );
 };
 
