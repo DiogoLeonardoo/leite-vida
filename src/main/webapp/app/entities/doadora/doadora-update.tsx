@@ -1,21 +1,31 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button, Col, Row } from 'reactstrap';
-import { Translate, ValidatedField, ValidatedForm, translate } from 'react-jhipster';
+import { ValidatedField, ValidatedForm } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { useAppDispatch, useAppSelector } from 'app/config/store';
-
-import { TipoDoadora } from 'app/shared/model/enumerations/tipo-doadora.model';
-import { LocalPreNatal } from 'app/shared/model/enumerations/local-pre-natal.model';
-import { ResultadoExame } from 'app/shared/model/enumerations/resultado-exame.model';
 import { createEntity, getEntity, reset, updateEntity } from './doadora.reducer';
+import {
+  validateCPF,
+  validateCEP,
+  validatePhone,
+  maskCPF,
+  maskCEP,
+  maskPhone,
+  removeMask,
+  validationMessages,
+} from 'app/shared/util/validation-utils';
+import { buscarEndereco } from 'app/shared/util/cep-busca';
+import { PersonalInfoSection } from './components/personal-info-section';
+import { AddressSection } from './components/address-section';
+import { MedicalInfoSection } from './components/medical-info-section';
+import { ExamResultsSection } from './components/exam-results-section';
+import './doadora-update.scss';
 
 export const DoadoraUpdate = () => {
   const dispatch = useAppDispatch();
-
   const navigate = useNavigate();
-
   const { id } = useParams<'id'>();
   const isNew = id === undefined;
 
@@ -23,9 +33,25 @@ export const DoadoraUpdate = () => {
   const loading = useAppSelector(state => state.doadora.loading);
   const updating = useAppSelector(state => state.doadora.updating);
   const updateSuccess = useAppSelector(state => state.doadora.updateSuccess);
-  const tipoDoadoraValues = Object.keys(TipoDoadora);
-  const localPreNatalValues = Object.keys(LocalPreNatal);
-  const resultadoExameValues = Object.keys(ResultadoExame);
+
+  const [formData, setFormData] = useState({
+    cpf: '',
+    cep: '',
+    telefone: '',
+  });
+
+  const [formErrors, setFormErrors] = useState({
+    cpf: '',
+    cep: '',
+    telefone: '',
+    nome: '',
+    dataNascimento: '',
+    estado: '',
+    cidade: '',
+    endereco: '',
+  });
+
+  const [addressLoading, setAddressLoading] = useState(false);
 
   const handleClose = () => {
     navigate(`/doadora${location.search}`);
@@ -45,15 +71,200 @@ export const DoadoraUpdate = () => {
     }
   }, [updateSuccess]);
 
+  useEffect(() => {
+    if (!isNew && doadoraEntity) {
+      setFormData({
+        cpf: doadoraEntity.cpf ? maskCPF(doadoraEntity.cpf) : '',
+        cep: doadoraEntity.cep ? maskCEP(doadoraEntity.cep) : '',
+        telefone: doadoraEntity.telefone ? maskPhone(doadoraEntity.telefone) : '',
+      });
+    }
+  }, [doadoraEntity, isNew]);
+
+  const fetchAddressFromCEP = async (cep: string) => {
+    const cleanCEP = removeMask(cep);
+
+    if (cleanCEP.length !== 8) {
+      return;
+    }
+
+    setAddressLoading(true);
+
+    try {
+      const endereco = await buscarEndereco(cep);
+
+      if (!endereco) {
+        setFormErrors(prev => ({
+          ...prev,
+          cep: 'CEP não encontrado',
+        }));
+        return;
+      }
+
+      setFormErrors(prev => ({
+        ...prev,
+        cep: '',
+      }));
+
+      setTimeout(() => {
+        const estadoField = document.getElementById('doadora-estado') as HTMLInputElement;
+        const cidadeField = document.getElementById('doadora-cidade') as HTMLInputElement;
+        const enderecoField = document.getElementById('doadora-endereco') as HTMLInputElement;
+
+        if (estadoField) {
+          estadoField.value = endereco.uf;
+          estadoField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (cidadeField) {
+          cidadeField.value = endereco.localidade;
+          cidadeField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        if (enderecoField) {
+          const enderecoCompleto = `${endereco.logradouro}${endereco.bairro ? ', ' + endereco.bairro : ''}`.trim();
+          enderecoField.value = enderecoCompleto;
+          enderecoField.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      setFormErrors(prev => ({
+        ...prev,
+        cep: 'Erro ao buscar CEP',
+      }));
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    let maskedValue = value;
+
+    switch (field) {
+      case 'cpf':
+        maskedValue = maskCPF(value);
+        break;
+      case 'cep':
+        maskedValue = maskCEP(value);
+        break;
+      case 'telefone':
+        maskedValue = maskPhone(value);
+        break;
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [field]: maskedValue,
+    }));
+
+    if (formErrors[field]) {
+      setFormErrors(prev => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
+  };
+
+  const handleCEPBlur = () => {
+    validateForm();
+    if (formData.cep && validateCEP(formData.cep)) {
+      fetchAddressFromCEP(formData.cep);
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {
+      cpf: '',
+      cep: '',
+      telefone: '',
+      nome: '',
+      dataNascimento: '',
+      estado: '',
+      cidade: '',
+      endereco: '',
+    };
+
+    // Validate CPF
+    if (!formData.cpf) {
+      errors.cpf = validationMessages.cpf.required;
+    } else if (!validateCPF(formData.cpf)) {
+      errors.cpf = validationMessages.cpf.invalid;
+    }
+
+    // Validate CEP
+    if (!formData.cep) {
+      errors.cep = validationMessages.cep.required;
+    } else if (!validateCEP(formData.cep)) {
+      errors.cep = validationMessages.cep.invalid;
+    }
+
+    // Validate Phone
+    if (!formData.telefone) {
+      errors.telefone = validationMessages.phone.required;
+    } else if (!validatePhone(formData.telefone)) {
+      errors.telefone = validationMessages.phone.invalid;
+    }
+
+    // Validate other required fields from form
+    const nomeField = document.getElementById('doadora-nome') as HTMLInputElement;
+    const dataNascimentoField = document.getElementById('doadora-dataNascimento') as HTMLInputElement;
+    const estadoField = document.getElementById('doadora-estado') as HTMLInputElement;
+    const cidadeField = document.getElementById('doadora-cidade') as HTMLInputElement;
+    const enderecoField = document.getElementById('doadora-endereco') as HTMLInputElement;
+
+    if (!nomeField?.value?.trim()) {
+      errors.nome = 'Nome é obrigatório';
+    }
+
+    if (!dataNascimentoField?.value) {
+      errors.dataNascimento = 'Data de nascimento é obrigatória';
+    }
+
+    if (!estadoField?.value?.trim()) {
+      errors.estado = 'Estado é obrigatório';
+    }
+
+    if (!cidadeField?.value?.trim()) {
+      errors.cidade = 'Cidade é obrigatória';
+    }
+
+    if (!enderecoField?.value?.trim()) {
+      errors.endereco = 'Endereço é obrigatório';
+    }
+
+    setFormErrors(errors);
+    return !Object.values(errors).some(error => error !== '');
+  };
+
   const saveEntity = values => {
+    console.log('Form values:', values);
+
+    const isFormValid = validateForm();
+    console.log('Form is valid:', isFormValid);
+    console.log('Form errors:', formErrors);
+
+    if (!isFormValid) {
+      console.log('Form validation failed');
+      return;
+    }
+
     if (values.id !== undefined && typeof values.id !== 'number') {
       values.id = Number(values.id);
     }
 
+    const cleanedValues = {
+      ...values,
+      cpf: removeMask(formData.cpf || ''),
+      cep: removeMask(formData.cep || ''),
+      telefone: removeMask(formData.telefone || ''),
+      dataRegistro: new Date().toISOString().split('T')[0],
+    };
+
     const entity = {
       ...doadoraEntity,
-      ...values,
+      ...cleanedValues,
     };
+
+    console.log('Saving entity:', entity);
 
     if (isNew) {
       dispatch(createEntity(entity));
@@ -62,9 +273,20 @@ export const DoadoraUpdate = () => {
     }
   };
 
-  const defaultValues = () =>
-    isNew
-      ? {}
+  const defaultValues = () => {
+    const baseValues = isNew
+      ? {
+          tipoDoadora: 'DOMICILIAR',
+          localPreNatal: 'REDE_PUBLICA',
+          resultadoVDRL: 'NEGATIVO',
+          resultadoHBsAg: 'NEGATIVO',
+          resultadoFTAabs: 'NEGATIVO',
+          resultadoHIV: 'NEGATIVO',
+          transfusaoUltimos5Anos: false,
+          cpf: formData.cpf,
+          cep: formData.cep,
+          telefone: formData.telefone,
+        }
       : {
           tipoDoadora: 'DOMICILIAR',
           localPreNatal: 'REDE_PUBLICA',
@@ -73,241 +295,80 @@ export const DoadoraUpdate = () => {
           resultadoFTAabs: 'POSITIVO',
           resultadoHIV: 'POSITIVO',
           ...doadoraEntity,
+          cpf: formData.cpf,
+          cep: formData.cep,
+          telefone: formData.telefone,
         };
 
+    return baseValues;
+  };
+
   return (
-    <div>
-      <Row className="justify-content-center">
-        <Col md="8">
-          <h2 id="leiteVidaApp.doadora.home.createOrEditLabel" data-cy="DoadoraCreateUpdateHeading">
-            <Translate contentKey="leiteVidaApp.doadora.home.createOrEditLabel">Create or edit a Doadora</Translate>
-          </h2>
-        </Col>
-      </Row>
-      <Row className="justify-content-center">
-        <Col md="8">
-          {loading ? (
-            <p>Loading...</p>
-          ) : (
-            <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity}>
-              {!isNew ? (
-                <ValidatedField
-                  name="id"
-                  required
-                  readOnly
-                  id="doadora-id"
-                  label={translate('global.field.id')}
-                  validate={{ required: true }}
+    <div className="doadora-update-page">
+      <div className="container">
+        <Row className="justify-content-center">
+          <Col lg="10">
+            <div className="d-flex align-items-center mb-4">
+              <h2 className="mb-0">
+                <FontAwesomeIcon icon="user-plus" className="me-2" />
+                {isNew ? 'Cadastrar Nova Doadora' : 'Editar Doadora'}
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Carregando...</span>
+                </div>
+              </div>
+            ) : (
+              <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity}>
+                {!isNew ? (
+                  <ValidatedField
+                    name="id"
+                    required
+                    readOnly
+                    id="doadora-id"
+                    label="ID"
+                    validate={{ required: true }}
+                    style={{ display: 'none' }}
+                  />
+                ) : null}
+
+                <PersonalInfoSection
+                  formData={formData}
+                  formErrors={formErrors}
+                  handleInputChange={handleInputChange}
+                  validateForm={validateForm}
                 />
-              ) : null}
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.nome')}
-                id="doadora-nome"
-                name="nome"
-                data-cy="nome"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.cartaoSUS')}
-                id="doadora-cartaoSUS"
-                name="cartaoSUS"
-                data-cy="cartaoSUS"
-                type="text"
-                validate={{}}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.cpf')}
-                id="doadora-cpf"
-                name="cpf"
-                data-cy="cpf"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.dataNascimento')}
-                id="doadora-dataNascimento"
-                name="dataNascimento"
-                data-cy="dataNascimento"
-                type="date"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.cep')}
-                id="doadora-cep"
-                name="cep"
-                data-cy="cep"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.estado')}
-                id="doadora-estado"
-                name="estado"
-                data-cy="estado"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.cidade')}
-                id="doadora-cidade"
-                name="cidade"
-                data-cy="cidade"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.endereco')}
-                id="doadora-endereco"
-                name="endereco"
-                data-cy="endereco"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.telefone')}
-                id="doadora-telefone"
-                name="telefone"
-                data-cy="telefone"
-                type="text"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.profissao')}
-                id="doadora-profissao"
-                name="profissao"
-                data-cy="profissao"
-                type="text"
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.tipoDoadora')}
-                id="doadora-tipoDoadora"
-                name="tipoDoadora"
-                data-cy="tipoDoadora"
-                type="select"
-              >
-                {tipoDoadoraValues.map(tipoDoadora => (
-                  <option value={tipoDoadora} key={tipoDoadora}>
-                    {translate(`leiteVidaApp.TipoDoadora.${tipoDoadora}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.localPreNatal')}
-                id="doadora-localPreNatal"
-                name="localPreNatal"
-                data-cy="localPreNatal"
-                type="select"
-              >
-                {localPreNatalValues.map(localPreNatal => (
-                  <option value={localPreNatal} key={localPreNatal}>
-                    {translate(`leiteVidaApp.LocalPreNatal.${localPreNatal}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.resultadoVDRL')}
-                id="doadora-resultadoVDRL"
-                name="resultadoVDRL"
-                data-cy="resultadoVDRL"
-                type="select"
-              >
-                {resultadoExameValues.map(resultadoExame => (
-                  <option value={resultadoExame} key={resultadoExame}>
-                    {translate(`leiteVidaApp.ResultadoExame.${resultadoExame}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.resultadoHBsAg')}
-                id="doadora-resultadoHBsAg"
-                name="resultadoHBsAg"
-                data-cy="resultadoHBsAg"
-                type="select"
-              >
-                {resultadoExameValues.map(resultadoExame => (
-                  <option value={resultadoExame} key={resultadoExame}>
-                    {translate(`leiteVidaApp.ResultadoExame.${resultadoExame}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.resultadoFTAabs')}
-                id="doadora-resultadoFTAabs"
-                name="resultadoFTAabs"
-                data-cy="resultadoFTAabs"
-                type="select"
-              >
-                {resultadoExameValues.map(resultadoExame => (
-                  <option value={resultadoExame} key={resultadoExame}>
-                    {translate(`leiteVidaApp.ResultadoExame.${resultadoExame}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.resultadoHIV')}
-                id="doadora-resultadoHIV"
-                name="resultadoHIV"
-                data-cy="resultadoHIV"
-                type="select"
-              >
-                {resultadoExameValues.map(resultadoExame => (
-                  <option value={resultadoExame} key={resultadoExame}>
-                    {translate(`leiteVidaApp.ResultadoExame.${resultadoExame}`)}
-                  </option>
-                ))}
-              </ValidatedField>
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.transfusaoUltimos5Anos')}
-                id="doadora-transfusaoUltimos5Anos"
-                name="transfusaoUltimos5Anos"
-                data-cy="transfusaoUltimos5Anos"
-                check
-                type="checkbox"
-              />
-              <ValidatedField
-                label={translate('leiteVidaApp.doadora.dataRegistro')}
-                id="doadora-dataRegistro"
-                name="dataRegistro"
-                data-cy="dataRegistro"
-                type="date"
-                validate={{
-                  required: { value: true, message: translate('entity.validation.required') },
-                }}
-              />
-              <Button tag={Link} id="cancel-save" data-cy="entityCreateCancelButton" to="/doadora" replace color="info">
-                <FontAwesomeIcon icon="arrow-left" />
-                &nbsp;
-                <span className="d-none d-md-inline">
-                  <Translate contentKey="entity.action.back">Back</Translate>
-                </span>
-              </Button>
-              &nbsp;
-              <Button color="primary" id="save-entity" data-cy="entityCreateSaveButton" type="submit" disabled={updating}>
-                <FontAwesomeIcon icon="save" />
-                &nbsp;
-                <Translate contentKey="entity.action.save">Save</Translate>
-              </Button>
-            </ValidatedForm>
-          )}
-        </Col>
-      </Row>
+
+                <AddressSection
+                  formData={formData}
+                  formErrors={formErrors}
+                  handleInputChange={handleInputChange}
+                  handleCEPBlur={handleCEPBlur}
+                  addressLoading={addressLoading}
+                />
+
+                <MedicalInfoSection />
+
+                <ExamResultsSection />
+
+                <div className="d-flex justify-content-between align-items-center">
+                  <Button tag={Link} to="/doadora" color="secondary" size="lg">
+                    <FontAwesomeIcon icon="times" className="me-2" />
+                    Cancelar
+                  </Button>
+                  <Button color="primary" type="submit" disabled={updating} size="lg">
+                    <FontAwesomeIcon icon="save" className="me-2" />
+                    {updating ? 'Salvando...' : 'Salvar'}
+                  </Button>
+                </div>
+              </ValidatedForm>
+            )}
+          </Col>
+        </Row>
+      </div>
     </div>
   );
 };

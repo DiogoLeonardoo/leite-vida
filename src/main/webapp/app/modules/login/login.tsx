@@ -19,10 +19,19 @@ export const Login = () => {
     formState: { errors, touchedFields },
   } = useForm({ mode: 'onTouched' });
 
+  const formatCPF = (value: string) => {
+    const numericValue = value.replace(/\D/g, '').slice(0, 11);
+    return numericValue
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+  };
+
   const handleLogin = (username, password, rememberMe = false) => dispatch(login(username, password, rememberMe));
 
   const onSubmit = ({ username, password, rememberMe }) => {
-    handleLogin(username, password, rememberMe);
+    const cleanUsername = username.replace(/\D/g, '');
+    handleLogin(cleanUsername, password, rememberMe);
   };
 
   const { from } = pageLocation.state || { from: { pathname: '/home', search: pageLocation.search } };
@@ -48,14 +57,25 @@ export const Login = () => {
           <div className="form-group">
             <ValidatedField
               name="username"
-              placeholder={'Login'}
+              placeholder={'CPF'}
               required
               autoFocus
               data-cy="username"
-              validate={{ required: 'Login não pode ser vazio!' }}
+              maxLength={14}
+              validate={{
+                required: 'CPF não pode ser vazio!',
+                pattern: {
+                  value: /^\d{3}\.\d{3}\.\d{3}-\d{2}$/,
+                  message: 'CPF deve ter 11 dígitos',
+                },
+              }}
               register={register}
               error={errors.username as FieldError}
               isTouched={touchedFields.username}
+              onChange={e => {
+                const formatted = formatCPF(e.target.value);
+                e.target.value = formatted;
+              }}
             />
           </div>
           <div className="form-group">
