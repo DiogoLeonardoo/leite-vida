@@ -1,10 +1,220 @@
-/* ==========================================================================
-Main page styles
-========================================================================== */
-.hipster {
-  display: inline-block;
-  width: 100%;
-  height: 497px;
-  background: url('/content/images/jhipster_family_member_1.svg') no-repeat center top;
-  background-size: contain;
+.home-page {
+  background: linear-gradient(135deg, #ddeaf0 0%, #b8d4e3 100%);
+  padding-top: 10em;
+
+  .welcome-section {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8f4f8;
+
+    .welcome-icon {
+      .icon-circle {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(135deg, #7ad27d 0%, #9de0a0 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(122, 210, 125, 0.3);
+      }
+    }
+
+    .welcome-title {
+      color: #2c5282;
+      font-weight: 600;
+      font-size: 1.8rem;
+    }
+
+    .welcome-subtitle {
+      font-size: 1.1rem;
+      color: #4a90a4;
+    }
+  }
+
+  .stats-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+    background: white;
+    border: 1px solid #e8f4f8;
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    .stats-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #2c5282;
+      margin-bottom: 0.5rem;
+      min-height: 3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .spinner-border-sm {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+
+    .stats-label {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4a90a4;
+      letter-spacing: 0.5px;
+    }
+
+    &.stats-card-success {
+      background: linear-gradient(135deg, #7ad27d 0%, #9de0a0 100%);
+      color: white;
+      border: 1px solid #68c26c;
+
+      .stats-number {
+        color: white;
+      }
+
+      .stats-label {
+        color: rgba(255, 255, 255, 0.95);
+      }
+    }
+  }
+
+  .action-button {
+    border: none;
+    border-radius: 12px;
+    padding: 1.5rem 1rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(-1px);
+    }
+
+    .button-subtitle {
+      font-size: 0.85rem;
+      font-weight: 400;
+      opacity: 0.85;
+      margin-top: 0.5rem;
+    }
+
+    i {
+      font-size: 1.2rem;
+    }
+
+    &.btn-secondary {
+      background: linear-gradient(135deg, #4a90a4 0%, #2c5282 100%);
+      color: white;
+
+      &:hover {
+        background: linear-gradient(135deg, #357a8a 0%, #1a365d 100%);
+        color: white;
+      }
+    }
+
+    &.btn-success {
+      background: linear-gradient(135deg, #7ad27d 0%, #9de0a0 100%);
+      color: white;
+
+      &:hover {
+        background: linear-gradient(135deg, #68c26c 0%, #85d388 100%);
+        color: white;
+      }
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, #5a9fd4 0%, #7bb3e0 100%);
+      color: white;
+
+      &:hover {
+        background: linear-gradient(135deg, #4a90a4 0%, #6ba8d6 100%);
+        color: white;
+      }
+    }
+
+    &.btn-light {
+      background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+      color: #2c5282;
+      border: 1px solid #e8f4f8;
+
+      &:hover {
+        background: linear-gradient(135deg, #edf2f7 0%, #e2e8f0 100%);
+        color: #2c5282;
+        border-color: #ddeaf0;
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding-top: 5em;
+
+    .welcome-section {
+      padding: 1.5rem;
+
+      .welcome-title {
+        font-size: 1.5rem;
+      }
+
+      .welcome-subtitle {
+        font-size: 1rem;
+      }
+    }
+
+    .stats-card {
+      .stats-number {
+        font-size: 2rem;
+      }
+    }
+
+    .action-button {
+      padding: 1.2rem 0.8rem;
+      font-size: 1rem;
+
+      .button-subtitle {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+// Cores da paleta personalizada
+:root {
+  --primary-blue: #ddeaf0;
+  --secondary-blue: #b8d4e3;
+  --accent-blue: #5a9fd4;
+  --dark-blue: #2c5282;
+  --text-blue: #4a90a4;
+
+  --primary-green: #7ad27d;
+  --secondary-green: #9de0a0;
+  --accent-green: #68c26c;
+  --dark-green: #5bb960;
+
+  --neutral-light: #f7fafc;
+  --neutral-medium: #edf2f7;
+  --neutral-border: #e8f4f8;
 }
