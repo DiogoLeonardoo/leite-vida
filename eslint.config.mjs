@@ -71,7 +71,7 @@ export default tseslint.config(
       'no-labels': 'error',
       'no-caller': 'error',
       'no-bitwise': 'error',
-      'no-console': ['error', { allow: ['warn', 'error'] }],
+      'no-console': 'off',
       'no-new-wrappers': 'error',
       'no-eval': 'error',
       'no-new': 'error',
@@ -91,12 +91,8 @@ export default tseslint.config(
     files: ['src/main/webapp/**/*.spec.ts'],
     rules: {
       '@typescript-eslint/no-empty-function': 'off',
+      'no-console': 'off',
     },
   },
   // jhipster-needle-eslint-add-config - JHipster will add additional config here
-  {
-    rules: {
-      'prettier/prettier': 'warn',
-    },
-  },
 );
