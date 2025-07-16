@@ -95,4 +95,8 @@ public class DoadoraService {
         LOG.debug("Request to delete Doadora : {}", id);
         doadoraRepository.deleteById(id);
     }
+
+    public long contarDoadoras() {
+        return doadoraRepository.count();
+    }
 }

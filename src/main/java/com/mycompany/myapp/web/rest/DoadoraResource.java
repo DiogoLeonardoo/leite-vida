@@ -198,4 +198,9 @@ public class DoadoraResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    @GetMapping("/count-doadora")
+    public long contarDoadoras() {
+        return doadoraService.contarDoadoras();
+    }
 }
