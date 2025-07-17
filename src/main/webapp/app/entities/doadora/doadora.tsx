@@ -6,9 +6,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
-import { useAppDispatch, useAppSelector } from 'app/config/store';
-import { getEntities } from './doadora.reducer';
+import { useAppDispatch } from 'app/config/store';
 import { maskCPF, maskPhone } from 'app/shared/util/validation-utils';
+import axios from 'axios';
 import './doadora.scss';
 
 const ITEMS_PER_PAGE = 6;
@@ -25,9 +25,9 @@ export const Doadora = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const doadoraList = useAppSelector(state => state.doadora.entities);
-  const loading = useAppSelector(state => state.doadora.loading);
-  const totalItems = useAppSelector(state => state.doadora.totalItems);
+  const [doadoraList, setDoadoraList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Debounce for search filter
   useEffect(() => {
@@ -41,16 +41,37 @@ export const Doadora = () => {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
+  const fetchDoadoras = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/doadoras/buscar-doadoras', {
+        params: {
+          page: paginationState.activePage - 1,
+          size: paginationState.itemsPerPage,
+          sort: `${paginationState.sort},${paginationState.order}`,
+          search: debouncedSearchTerm || undefined,
+        },
+      });
+
+      // Handle the nested content array in the response
+      const responseData = response.data;
+      const doadoras = responseData.content || responseData;
+
+      setDoadoraList(doadoras);
+
+      // Get total count from either the response headers or the response itself
+      const totalCount = responseData.totalElements || parseInt(response.headers['x-total-count'], 10);
+      setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+    } catch (error) {
+      console.error('Error fetching doadoras:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    dispatch(
-      getEntities({
-        page: paginationState.activePage - 1,
-        size: paginationState.itemsPerPage,
-        sort: `${paginationState.sort},${paginationState.order}`,
-        search: debouncedSearchTerm || undefined,
-      }),
-    );
-  }, [dispatch, debouncedSearchTerm, paginationState.activePage, paginationState.order, paginationState.sort]);
+    fetchDoadoras();
+  }, [debouncedSearchTerm, paginationState.activePage, paginationState.order, paginationState.sort]);
 
   useEffect(() => {
     const params = new URLSearchParams(pageLocation.search);
