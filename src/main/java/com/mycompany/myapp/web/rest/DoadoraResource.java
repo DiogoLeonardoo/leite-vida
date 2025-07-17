@@ -56,15 +56,24 @@ public class DoadoraResource {
      * {@code POST  /doadoras} : Create a new doadora.
      *
      * @param doadoraDTO the doadoraDTO to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new doadoraDTO, or with status {@code 400 (Bad Request)} if the doadora has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new doadoraDTO, or with status {@code 400 (Bad Request)} if
+     *         the doadora has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
     public ResponseEntity<DoadoraDTO> createDoadora(@Valid @RequestBody DoadoraDTO doadoraDTO) throws URISyntaxException {
         LOG.debug("REST request to save Doadora : {}", doadoraDTO);
+
         if (doadoraDTO.getId() != null) {
             throw new BadRequestAlertException("A new doadora cannot already have an ID", ENTITY_NAME, "idexists");
         }
+
+        // ✅ Verifica se CPF já existe
+        if (doadoraService.existsByCpf(doadoraDTO.getCpf())) {
+            throw new BadRequestAlertException("CPF já cadastrado", ENTITY_NAME, "cpfexists");
+        }
+
         doadoraDTO = doadoraService.save(doadoraDTO);
         return ResponseEntity.created(new URI("/api/doadoras/" + doadoraDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, doadoraDTO.getId().toString()))
@@ -74,11 +83,14 @@ public class DoadoraResource {
     /**
      * {@code PUT  /doadoras/:id} : Updates an existing doadora.
      *
-     * @param id the id of the doadoraDTO to save.
+     * @param id         the id of the doadoraDTO to save.
      * @param doadoraDTO the doadoraDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated doadoraDTO,
-     * or with status {@code 400 (Bad Request)} if the doadoraDTO is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the doadoraDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated doadoraDTO,
+     *         or with status {@code 400 (Bad Request)} if the doadoraDTO is not
+     *         valid,
+     *         or with status {@code 500 (Internal Server Error)} if the doadoraDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
@@ -105,14 +117,19 @@ public class DoadoraResource {
     }
 
     /**
-     * {@code PATCH  /doadoras/:id} : Partial updates given fields of an existing doadora, field will ignore if it is null
+     * {@code PATCH  /doadoras/:id} : Partial updates given fields of an existing
+     * doadora, field will ignore if it is null
      *
-     * @param id the id of the doadoraDTO to save.
+     * @param id         the id of the doadoraDTO to save.
      * @param doadoraDTO the doadoraDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated doadoraDTO,
-     * or with status {@code 400 (Bad Request)} if the doadoraDTO is not valid,
-     * or with status {@code 404 (Not Found)} if the doadoraDTO is not found,
-     * or with status {@code 500 (Internal Server Error)} if the doadoraDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated doadoraDTO,
+     *         or with status {@code 400 (Bad Request)} if the doadoraDTO is not
+     *         valid,
+     *         or with status {@code 404 (Not Found)} if the doadoraDTO is not
+     *         found,
+     *         or with status {@code 500 (Internal Server Error)} if the doadoraDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
@@ -145,7 +162,8 @@ public class DoadoraResource {
      *
      * @param pageable the pagination information.
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of doadoras in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of doadoras in body.
      */
     @GetMapping("")
     public ResponseEntity<List<DoadoraDTO>> getAllDoadoras(
@@ -163,7 +181,8 @@ public class DoadoraResource {
      * {@code GET  /doadoras/count} : count all the doadoras.
      *
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count
+     *         in body.
      */
     @GetMapping("/count")
     public ResponseEntity<Long> countDoadoras(DoadoraCriteria criteria) {
@@ -175,7 +194,8 @@ public class DoadoraResource {
      * {@code GET  /doadoras/:id} : get the "id" doadora.
      *
      * @param id the id of the doadoraDTO to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the doadoraDTO, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the doadoraDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
     public ResponseEntity<DoadoraDTO> getDoadora(@PathVariable("id") Long id) {
@@ -197,5 +217,10 @@ public class DoadoraResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @GetMapping("/count-doadora")
+    public long contarDoadoras() {
+        return doadoraService.contarDoadoras();
     }
 }

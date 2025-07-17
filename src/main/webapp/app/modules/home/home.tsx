@@ -1,99 +1,255 @@
-import './home.scss';
-
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { Translate } from 'react-jhipster';
-import { Alert, Col, Row } from 'reactstrap';
-
+import React, { useEffect, useState } from 'react';
+import { Alert, Badge, Button, Card, CardBody, Col, Container, Row } from 'reactstrap';
 import { useAppSelector } from 'app/config/store';
+import axios from 'axios';
+import './home.scss';
+import { useNavigate } from 'react-router';
 
 export const Home = () => {
+  const navigate = useNavigate();
   const account = useAppSelector(state => state.authentication.account);
+  const [doadorasCount, setDoadorasCount] = useState<number | null>(null);
+  const [volumeSum, setVolumeSum] = useState<number | null>(null);
+  const [processamentoSum, setProcessamentoSum] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+
+        const doadorasResponse = await axios.get('api/doadoras/count-doadora');
+        setDoadorasCount(doadorasResponse.data);
+
+        const volumeResponse = await axios.get('api/estoques/soma-volume');
+        setVolumeSum(volumeResponse.data);
+
+        const processamentoResponse = await axios.get('api/coletas/volume-aguardando-processamento');
+        setProcessamentoSum(processamentoResponse.data);
+
+        setError(null);
+      } catch (err) {
+        console.error('Erro ao buscar dados:', err);
+        setError('Erro ao carregar dados');
+        setDoadorasCount(null);
+        setVolumeSum(null);
+        setProcessamentoSum(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleNovaColeta = () => {
+    // Implementar navegação para nova coleta
+    console.log('Nova Coleta');
+  };
+
+  const handleNovaDoadora = () => {
+    // Implementar navegação para nova doadora
+    navigate('/doadora/new');
+  };
+
+  const handleNovoPaciente = () => {
+    // Implementar navegação para novo paciente
+    navigate('/paciente/new');
+  };
+
+  const handleConsultarEstoque = () => {
+    // Implementar navegação para consultar estoque
+    console.log('Consultar Estoque');
+  };
+
+  const handleUsuarios = () => {
+    // Implementar navegação para usuários
+    console.log('Usuários');
+  };
+
+  const handleNovaDistribuicao = () => {
+    // Implementar navegação para nova distribuição
+    console.log('Nova Distribuição');
+  };
+
+  const handleRealizarAnalises = () => {
+    // Implementar navegação para realizar análises
+    console.log('Realizar Análises');
+  };
+
+  const isLabUser = account?.authorities?.includes('ROLE_LAB');
 
   return (
-    <Row>
-      <Col md="3" className="pad">
-        <span className="hipster rounded" />
-      </Col>
-      <Col md="9">
-        <h1 className="display-4">
-          <Translate contentKey="home.title">Welcome, Java Hipster!</Translate>
-        </h1>
-        <p className="lead">
-          <Translate contentKey="home.subtitle">This is your homepage</Translate>
-        </p>
-        {account?.login ? (
-          <div>
-            <Alert color="success">
-              <Translate contentKey="home.logged.message" interpolate={{ username: account.login }}>
-                You are logged in as user {account.login}.
-              </Translate>
-            </Alert>
-          </div>
+    <div className="home-page">
+      <Container fluid className="py-4 px-5">
+        {/* Header com boas vindas */}
+        <Row className="mb-4">
+          <Col>
+            <div className="welcome-section d-flex align-items-center">
+              <div className="welcome-icon me-3">
+                <div className="icon-circle">
+                  <i className="fas fa-tint text-success">
+                    <img src="./content/images/criancanobraco.svg" style={{ width: '40px', height: '40px' }} />
+                  </i>
+                </div>
+              </div>
+              <div>
+                <h2 className="welcome-title mb-1">Bem-vindo ao LeiteVida</h2>
+                <p className="welcome-subtitle text-muted mb-0">
+                  Olá, {account?.firstName}! Gerencie doações e distribuições de leite materno
+                </p>
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        {/* Cards de estatísticas */}
+        <Row className="mb-4">
+          <Col md={4} className="mb-3">
+            <Card className="stats-card h-100">
+              <CardBody className="d-flex align-items-center">
+                <div className="text-center flex-grow-1">
+                  <div className="stats-icon mb-2">
+                    <i className="fas fa-users text-primary"></i>
+                  </div>
+                  <div className="stats-number">
+                    {loading ? (
+                      <div className="spinner-border spinner-border-sm text-primary" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    ) : error ? (
+                      <span className="text-danger">--</span>
+                    ) : (
+                      doadorasCount || 0
+                    )}
+                  </div>
+                  <div className="stats-label">DOADORAS CADASTRADAS</div>
+                </div>
+                <div className="ms-3">
+                  <img src="./content/images/pessoas.svg" style={{ width: '60px', height: '60px' }} />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col md={4} className="mb-3">
+            <Card className="stats-card stats-card-success h-100">
+              <CardBody className="d-flex align-items-center">
+                <div className="text-center flex-grow-1">
+                  <div className="stats-icon mb-2">
+                    <i className="fas fa-battery-full text-white"></i>
+                  </div>
+                  <div className="stats-number text-white">
+                    {loading ? (
+                      <div className="spinner-border spinner-border-sm text-white" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    ) : error ? (
+                      <span className="text-white">--</span>
+                    ) : (
+                      `${volumeSum || 0}mL`
+                    )}
+                  </div>
+                  <div className="stats-label text-white">DE LEITE EM ESTOQUE</div>
+                </div>
+                <div className="ms-3">
+                  <img src="./content/images/mamadeira.svg" style={{ width: '60px', height: '60px' }} />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+          <Col md={4} className="mb-3">
+            <Card className="stats-card h-100">
+              <CardBody className="d-flex align-items-center">
+                <div className="text-center flex-grow-1">
+                  <div className="stats-icon mb-2">
+                    <i className="fas fa-flask text-info"></i>
+                  </div>
+                  <div className="stats-number">
+                    {loading ? (
+                      <div className="spinner-border spinner-border-sm text-info" role="status">
+                        <span className="visually-hidden">Carregando...</span>
+                      </div>
+                    ) : error ? (
+                      <span className="text-danger">--</span>
+                    ) : (
+                      `${processamentoSum || 0}mL`
+                    )}
+                  </div>
+                  <div className="stats-label">DE LEITE EM PROCESSAMENTO</div>
+                </div>
+                <div className="ms-3">
+                  <img src="./content/images/frascolab.svg" style={{ width: '60px', height: '60px' }} />
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Botões de ação */}
+        {isLabUser ? (
+          <Row>
+            <Col md={4} className="mb-3 offset-md-4">
+              <Button color="primary" block size="lg" className="action-button text-center" onClick={handleRealizarAnalises}>
+                <i className="fas fa-flask me-2"></i>
+                Realizar Análises
+                <div className="button-subtitle">Avalie os leites coletados</div>
+              </Button>
+            </Col>
+          </Row>
         ) : (
-          <div>
-            <Alert color="warning">
-              <Translate contentKey="global.messages.info.authenticated.prefix">If you want to </Translate>
+          <>
+            <Row>
+              <Col md={4} className="mb-3">
+                <Button color="secondary" block size="lg" className="action-button" onClick={handleNovaColeta}>
+                  <i className="fas fa-plus-circle me-2"></i>
+                  Nova Coleta
+                  <div className="button-subtitle">Registrar nova coleta de leite materno</div>
+                </Button>
+              </Col>
+              <Col md={4} className="mb-3">
+                <Button color="success" block size="lg" className="action-button" onClick={handleNovaDoadora}>
+                  <i className="fas fa-user-plus me-2"></i>
+                  Nova Doadora
+                  <div className="button-subtitle">Cadastrar nova doadora</div>
+                </Button>
+              </Col>
+              <Col md={4} className="mb-3">
+                <Button color="primary" block size="lg" className="action-button" onClick={handleNovoPaciente}>
+                  <i className="fas fa-baby me-2"></i>
+                  Novo Paciente
+                  <div className="button-subtitle">Registrar novo paciente</div>
+                </Button>
+              </Col>
+            </Row>
 
-              <Link to="/login" className="alert-link">
-                <Translate contentKey="global.messages.info.authenticated.link"> sign in</Translate>
-              </Link>
-              <Translate contentKey="global.messages.info.authenticated.suffix">
-                , you can try the default accounts:
-                <br />- Administrator (login=&quot;admin&quot; and password=&quot;admin&quot;)
-                <br />- User (login=&quot;user&quot; and password=&quot;user&quot;).
-              </Translate>
-            </Alert>
-
-            <Alert color="warning">
-              <Translate contentKey="global.messages.info.register.noaccount">You do not have an account yet?</Translate>&nbsp;
-              <Link to="/account/register" className="alert-link">
-                <Translate contentKey="global.messages.info.register.link">Register a new account</Translate>
-              </Link>
-            </Alert>
-          </div>
+            <Row>
+              <Col md={4} className="mb-3">
+                <Button color="success" block size="lg" className="action-button" onClick={handleConsultarEstoque}>
+                  <i className="fas fa-search me-2"></i>
+                  Consultar Estoque
+                  <div className="button-subtitle">Verificar o estoque de leite materno</div>
+                </Button>
+              </Col>
+              <Col md={4} className="mb-3">
+                <Button color="light" block size="lg" className="action-button" onClick={handleUsuarios}>
+                  <i className="fas fa-users-cog me-2"></i>
+                  Usuários
+                  <div className="button-subtitle">Gerenciar usuários do sistema</div>
+                </Button>
+              </Col>
+              <Col md={4} className="mb-3">
+                <Button color="success" block size="lg" className="action-button" onClick={handleNovaDistribuicao}>
+                  <i className="fas fa-share-alt me-2"></i>
+                  Nova Distribuição
+                  <div className="button-subtitle">Realizar uma nova distribuição</div>
+                </Button>
+              </Col>
+            </Row>
+          </>
         )}
-        <p>
-          <Translate contentKey="home.question">If you have any question on JHipster:</Translate>
-        </p>
-
-        <ul>
-          <li>
-            <a href="https://www.jhipster.tech/" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.homepage">JHipster homepage</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://stackoverflow.com/tags/jhipster/info" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.stackoverflow">JHipster on Stack Overflow</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/jhipster/generator-jhipster/issues?state=open" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.bugtracker">JHipster bug tracker</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://gitter.im/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.chat">JHipster public chat room</Translate>
-            </a>
-          </li>
-          <li>
-            <a href="https://twitter.com/jhipster" target="_blank" rel="noopener noreferrer">
-              <Translate contentKey="home.link.follow">follow @jhipster on Twitter</Translate>
-            </a>
-          </li>
-        </ul>
-
-        <p>
-          <Translate contentKey="home.like">If you like JHipster, do not forget to give us a star on</Translate>{' '}
-          <a href="https://github.com/jhipster/generator-jhipster" target="_blank" rel="noopener noreferrer">
-            GitHub
-          </a>
-          !
-        </p>
-      </Col>
-    </Row>
+      </Container>
+    </div>
   );
 };
 

@@ -95,4 +95,8 @@ public class ColetaService {
         LOG.debug("Request to delete Coleta : {}", id);
         coletaRepository.deleteById(id);
     }
+
+    public Double getVolumeAguardandoProcessamento() {
+        return coletaRepository.somarVolumeMlPorStatus();
+    }
 }

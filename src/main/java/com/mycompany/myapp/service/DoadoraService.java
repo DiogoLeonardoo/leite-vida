@@ -95,4 +95,12 @@ public class DoadoraService {
         LOG.debug("Request to delete Doadora : {}", id);
         doadoraRepository.deleteById(id);
     }
+
+    public long contarDoadoras() {
+        return doadoraRepository.count();
+    }
+
+    public boolean existsByCpf(String cpf) {
+        return doadoraRepository.existsByCpf(cpf);
+    }
 }

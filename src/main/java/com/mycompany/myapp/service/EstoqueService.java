@@ -112,4 +112,8 @@ public class EstoqueService {
         LOG.debug("Request to delete Estoque : {}", id);
         estoqueRepository.deleteById(id);
     }
+
+    public Long somarVolumeDisponivelMl() {
+        return estoqueRepository.somarVolumeDisponivelMl();
+    }
 }

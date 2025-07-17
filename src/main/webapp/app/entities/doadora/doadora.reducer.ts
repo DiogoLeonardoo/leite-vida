@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { createAsyncThunk, isFulfilled, isPending } from '@reduxjs/toolkit';
+import { createAsyncThunk, isFulfilled, isPending, isRejected } from '@reduxjs/toolkit';
 import { cleanEntity } from 'app/shared/util/entity-utils';
 import { EntityState, IQueryParams, createEntitySlice, serializeAxiosError } from 'app/shared/reducers/reducer.utils';
 import { IDoadora, defaultValue } from 'app/shared/model/doadora.model';
@@ -39,9 +39,35 @@ export const getEntity = createAsyncThunk(
 export const createEntity = createAsyncThunk(
   'doadora/create_entity',
   async (entity: IDoadora, thunkAPI) => {
-    const result = await axios.post<IDoadora>(apiUrl, cleanEntity(entity));
-    thunkAPI.dispatch(getEntities({}));
-    return result;
+    try {
+      const result = await axios.post<IDoadora>(apiUrl, cleanEntity(entity));
+      thunkAPI.dispatch(getEntities({}));
+      return result;
+    } catch (error) {
+      console.log('Error in createEntity:', error);
+
+      // Check for CPF already exists error - multiple possible formats
+      if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        const errorMessage = errorData?.detail || errorData?.message || errorData?.title || '';
+
+        // Check various possible error formats for CPF conflict
+        if (
+          errorData?.title === 'CPF já cadastrado' ||
+          errorMessage.includes('CPF já cadastrado') ||
+          errorMessage.includes('cpfexists') ||
+          errorMessage.includes('ux_doadora__cpf') ||
+          errorMessage.includes('duplicar valor da chave') ||
+          errorMessage.includes('Chave (cpf)') ||
+          errorMessage.includes('já existe')
+        ) {
+          return thunkAPI.rejectWithValue('CPF já existe no sistema');
+        }
+      }
+
+      // For other errors, use the default serialization
+      return thunkAPI.rejectWithValue(error.response?.data?.detail || error.response?.data?.message || 'Erro interno do servidor');
+    }
   },
   { serializeError: serializeAxiosError },
 );
@@ -118,6 +144,12 @@ export const DoadoraSlice = createEntitySlice({
         state.errorMessage = null;
         state.updateSuccess = false;
         state.updating = true;
+      })
+      .addMatcher(isRejected(createEntity, updateEntity, partialUpdateEntity), (state, action) => {
+        state.updating = false;
+        state.loading = false;
+        state.updateSuccess = false;
+        state.errorMessage = (action.payload as string) || action.error?.message || 'Erro desconhecido';
       });
   },
 });

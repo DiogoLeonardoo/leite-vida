@@ -56,7 +56,9 @@ public class EstoqueResource {
      * {@code POST  /estoques} : Create a new estoque.
      *
      * @param estoqueDTO the estoqueDTO to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new estoqueDTO, or with status {@code 400 (Bad Request)} if the estoque has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new estoqueDTO, or with status {@code 400 (Bad Request)} if
+     *         the estoque has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
@@ -74,11 +76,14 @@ public class EstoqueResource {
     /**
      * {@code PUT  /estoques/:id} : Updates an existing estoque.
      *
-     * @param id the id of the estoqueDTO to save.
+     * @param id         the id of the estoqueDTO to save.
      * @param estoqueDTO the estoqueDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated estoqueDTO,
-     * or with status {@code 400 (Bad Request)} if the estoqueDTO is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the estoqueDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated estoqueDTO,
+     *         or with status {@code 400 (Bad Request)} if the estoqueDTO is not
+     *         valid,
+     *         or with status {@code 500 (Internal Server Error)} if the estoqueDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
@@ -105,14 +110,19 @@ public class EstoqueResource {
     }
 
     /**
-     * {@code PATCH  /estoques/:id} : Partial updates given fields of an existing estoque, field will ignore if it is null
+     * {@code PATCH  /estoques/:id} : Partial updates given fields of an existing
+     * estoque, field will ignore if it is null
      *
-     * @param id the id of the estoqueDTO to save.
+     * @param id         the id of the estoqueDTO to save.
      * @param estoqueDTO the estoqueDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated estoqueDTO,
-     * or with status {@code 400 (Bad Request)} if the estoqueDTO is not valid,
-     * or with status {@code 404 (Not Found)} if the estoqueDTO is not found,
-     * or with status {@code 500 (Internal Server Error)} if the estoqueDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated estoqueDTO,
+     *         or with status {@code 400 (Bad Request)} if the estoqueDTO is not
+     *         valid,
+     *         or with status {@code 404 (Not Found)} if the estoqueDTO is not
+     *         found,
+     *         or with status {@code 500 (Internal Server Error)} if the estoqueDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
@@ -145,7 +155,8 @@ public class EstoqueResource {
      *
      * @param pageable the pagination information.
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of estoques in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of estoques in body.
      */
     @GetMapping("")
     public ResponseEntity<List<EstoqueDTO>> getAllEstoques(
@@ -163,7 +174,8 @@ public class EstoqueResource {
      * {@code GET  /estoques/count} : count all the estoques.
      *
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count
+     *         in body.
      */
     @GetMapping("/count")
     public ResponseEntity<Long> countEstoques(EstoqueCriteria criteria) {
@@ -175,7 +187,8 @@ public class EstoqueResource {
      * {@code GET  /estoques/:id} : get the "id" estoque.
      *
      * @param id the id of the estoqueDTO to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the estoqueDTO, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the estoqueDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
     public ResponseEntity<EstoqueDTO> getEstoque(@PathVariable("id") Long id) {
@@ -197,5 +210,10 @@ public class EstoqueResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @GetMapping("/soma-volume")
+    public Long getSomaVolumeDisponivel() {
+        return estoqueService.somarVolumeDisponivelMl();
     }
 }

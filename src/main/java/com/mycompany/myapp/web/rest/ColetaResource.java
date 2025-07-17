@@ -198,4 +198,9 @@ public class ColetaResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    @GetMapping("/volume-aguardando-processamento")
+    public Double getVolumeAguardandoProcessamento() {
+        return coletaService.getVolumeAguardandoProcessamento();
+    }
 }
