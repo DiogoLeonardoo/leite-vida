@@ -20,8 +20,25 @@ const apiUrl = 'api/doadoras';
 
 export const getEntities = createAsyncThunk(
   'doadora/fetch_entity_list',
-  async ({ page, size, sort }: IQueryParams) => {
-    const requestUrl = `${apiUrl}?${sort ? `page=${page}&size=${size}&sort=${sort}&` : ''}cacheBuster=${new Date().getTime()}`;
+  async (params: Record<string, any>) => {
+    const queryParams = new URLSearchParams();
+
+    if (params.page !== undefined) queryParams.append('page', params.page);
+    if (params.size !== undefined) queryParams.append('size', params.size);
+    if (params.sort) queryParams.append('sort', params.sort);
+    if (params.search && params.search.trim()) {
+      queryParams.append('search', params.search.trim());
+    }
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (!['page', 'size', 'sort', 'search'].includes(key) && value != null) {
+        queryParams.append(key, value);
+      }
+    });
+
+    queryParams.append('cacheBuster', new Date().getTime().toString());
+
+    const requestUrl = `${apiUrl}?${queryParams.toString()}`;
     return axios.get<IDoadora[]>(requestUrl);
   },
   { serializeError: serializeAxiosError },
