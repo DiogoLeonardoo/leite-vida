@@ -7,11 +7,17 @@ import { validateCEP } from 'app/shared/util/validation-utils';
 interface AddressSectionProps {
   formData: {
     cep: string;
+    estado: string;
+    cidade: string;
+    endereco: string;
   };
   formErrors: {
     cep: string;
+    estado: string;
+    cidade: string;
+    endereco: string;
   };
-  handleInputChange: (field: string, value: string) => void;
+  handleInputChange: (field: string, value: string | boolean) => void;
   handleCEPBlur: () => void;
   addressLoading: boolean;
 }
@@ -40,6 +46,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
               name="cep"
               data-cy="cep"
               type="text"
+              value={formData.cep}
               onChange={e => handleInputChange('cep', e.target.value)}
               onBlur={handleCEPBlur}
               maxLength={9}
@@ -64,6 +71,8 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
               name="estado"
               data-cy="estado"
               type="text"
+              value={formData.estado}
+              onChange={e => handleInputChange('estado', e.target.value)}
               validate={{
                 required: { value: true, message: 'Estado é obrigatório' },
                 minLength: { value: 2, message: 'Estado deve ter pelo menos 2 caracteres' },
@@ -77,6 +86,8 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
               name="cidade"
               data-cy="cidade"
               type="text"
+              value={formData.cidade}
+              onChange={e => handleInputChange('cidade', e.target.value)}
               validate={{
                 required: { value: true, message: 'Cidade é obrigatória' },
                 minLength: { value: 2, message: 'Cidade deve ter pelo menos 2 caracteres' },
@@ -92,6 +103,8 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
               name="endereco"
               data-cy="endereco"
               type="text"
+              value={formData.endereco}
+              onChange={e => handleInputChange('endereco', e.target.value)}
               validate={{
                 required: { value: true, message: 'Endereço é obrigatório' },
                 minLength: { value: 5, message: 'Endereço deve ter pelo menos 5 caracteres' },

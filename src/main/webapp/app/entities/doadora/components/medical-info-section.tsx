@@ -5,7 +5,20 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { TipoDoadora } from 'app/shared/model/enumerations/tipo-doadora.model';
 import { LocalPreNatal } from 'app/shared/model/enumerations/local-pre-natal.model';
 
-export const MedicalInfoSection: React.FC = () => {
+interface MedicalInfoSectionProps {
+  formData: {
+    tipoDoadora: string;
+    localPreNatal: string;
+    transfusaoUltimos5Anos: boolean;
+  };
+  formErrors: {
+    tipoDoadora: string;
+    localPreNatal: string;
+  };
+  handleInputChange: (field: string, value: string | boolean) => void;
+}
+
+export const MedicalInfoSection: React.FC<MedicalInfoSectionProps> = ({ formData, formErrors, handleInputChange }) => {
   const tipoDoadoraValues = Object.keys(TipoDoadora);
   const localPreNatalValues = Object.keys(LocalPreNatal);
 
@@ -20,7 +33,20 @@ export const MedicalInfoSection: React.FC = () => {
       <CardBody>
         <Row>
           <Col md="6">
-            <ValidatedField label="Tipo de Doadora" id="doadora-tipoDoadora" name="tipoDoadora" data-cy="tipoDoadora" type="select">
+            <ValidatedField
+              label="Tipo de Doadora"
+              id="doadora-tipoDoadora"
+              name="tipoDoadora"
+              data-cy="tipoDoadora"
+              type="select"
+              value={formData.tipoDoadora}
+              onChange={e => handleInputChange('tipoDoadora', e.target.value)}
+              validate={{
+                required: { value: true, message: 'Tipo de doadora é obrigatório' },
+              }}
+              errorMessage={formErrors.tipoDoadora}
+            >
+              <option value="">Selecione...</option>
               {tipoDoadoraValues.map(tipoDoadora => (
                 <option value={tipoDoadora} key={tipoDoadora}>
                   {translate(`leiteVidaApp.TipoDoadora.${tipoDoadora}`)}
@@ -35,7 +61,14 @@ export const MedicalInfoSection: React.FC = () => {
               name="localPreNatal"
               data-cy="localPreNatal"
               type="select"
+              value={formData.localPreNatal}
+              onChange={e => handleInputChange('localPreNatal', e.target.value)}
+              validate={{
+                required: { value: true, message: 'Local do pré-natal é obrigatório' },
+              }}
+              errorMessage={formErrors.localPreNatal}
             >
+              <option value="">Selecione...</option>
               {localPreNatalValues.map(localPreNatal => (
                 <option value={localPreNatal} key={localPreNatal}>
                   {translate(`leiteVidaApp.LocalPreNatal.${localPreNatal}`)}
@@ -53,6 +86,8 @@ export const MedicalInfoSection: React.FC = () => {
               data-cy="transfusaoUltimos5Anos"
               check
               type="checkbox"
+              checked={formData.transfusaoUltimos5Anos}
+              onChange={e => handleInputChange('transfusaoUltimos5Anos', e.target.checked)}
             />
           </Col>
         </Row>

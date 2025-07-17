@@ -22,6 +22,7 @@ import { AddressSection } from './components/address-section';
 import { MedicalInfoSection } from './components/medical-info-section';
 import { ExamResultsSection } from './components/exam-results-section';
 import './doadora-update.scss';
+import { toast } from 'react-toastify';
 
 export const DoadoraUpdate = () => {
   const dispatch = useAppDispatch();
@@ -38,6 +39,20 @@ export const DoadoraUpdate = () => {
     cpf: '',
     cep: '',
     telefone: '',
+    nome: '',
+    cartaoSUS: '',
+    dataNascimento: '',
+    profissao: '',
+    estado: '',
+    cidade: '',
+    endereco: '',
+    tipoDoadora: '',
+    localPreNatal: '',
+    transfusaoUltimos5Anos: false,
+    resultadoVDRL: '',
+    resultadoHBsAg: '',
+    resultadoFTAabs: '',
+    resultadoHIV: '',
   });
 
   const [formErrors, setFormErrors] = useState({
@@ -45,13 +60,22 @@ export const DoadoraUpdate = () => {
     cep: '',
     telefone: '',
     nome: '',
+    cartaoSUS: '',
     dataNascimento: '',
+    profissao: '',
     estado: '',
     cidade: '',
     endereco: '',
+    tipoDoadora: '',
+    localPreNatal: '',
+    resultadoVDRL: '',
+    resultadoHBsAg: '',
+    resultadoFTAabs: '',
+    resultadoHIV: '',
   });
 
   const [addressLoading, setAddressLoading] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
 
   const handleClose = () => {
     navigate(`/doadora${location.search}`);
@@ -77,6 +101,20 @@ export const DoadoraUpdate = () => {
         cpf: doadoraEntity.cpf ? maskCPF(doadoraEntity.cpf) : '',
         cep: doadoraEntity.cep ? maskCEP(doadoraEntity.cep) : '',
         telefone: doadoraEntity.telefone ? maskPhone(doadoraEntity.telefone) : '',
+        nome: doadoraEntity.nome || '',
+        cartaoSUS: doadoraEntity.cartaoSUS || '',
+        dataNascimento: doadoraEntity.dataNascimento || '',
+        profissao: doadoraEntity.profissao || '',
+        estado: doadoraEntity.estado || '',
+        cidade: doadoraEntity.cidade || '',
+        endereco: doadoraEntity.endereco || '',
+        tipoDoadora: doadoraEntity.tipoDoadora || '',
+        localPreNatal: doadoraEntity.localPreNatal || '',
+        transfusaoUltimos5Anos: doadoraEntity.transfusaoUltimos5Anos || false,
+        resultadoVDRL: doadoraEntity.resultadoVDRL || '',
+        resultadoHBsAg: doadoraEntity.resultadoHBsAg || '',
+        resultadoFTAabs: doadoraEntity.resultadoFTAabs || '',
+        resultadoHIV: doadoraEntity.resultadoHIV || '',
       });
     }
   }, [doadoraEntity, isNew]);
@@ -106,25 +144,13 @@ export const DoadoraUpdate = () => {
         cep: '',
       }));
 
-      setTimeout(() => {
-        const estadoField = document.getElementById('doadora-estado') as HTMLInputElement;
-        const cidadeField = document.getElementById('doadora-cidade') as HTMLInputElement;
-        const enderecoField = document.getElementById('doadora-endereco') as HTMLInputElement;
-
-        if (estadoField) {
-          estadoField.value = endereco.uf;
-          estadoField.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        if (cidadeField) {
-          cidadeField.value = endereco.localidade;
-          cidadeField.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-        if (enderecoField) {
-          const enderecoCompleto = `${endereco.logradouro}${endereco.bairro ? ', ' + endereco.bairro : ''}`.trim();
-          enderecoField.value = enderecoCompleto;
-          enderecoField.dispatchEvent(new Event('input', { bubbles: true }));
-        }
-      }, 100);
+      // Update form state instead of direct DOM manipulation
+      setFormData(prev => ({
+        ...prev,
+        estado: endereco.uf || '',
+        cidade: endereco.localidade || '',
+        endereco: `${endereco.logradouro}${endereco.bairro ? ', ' + endereco.bairro : ''}`.trim() || '',
+      }));
     } catch (error) {
       console.error('Erro ao buscar CEP:', error);
       setFormErrors(prev => ({
@@ -136,24 +162,88 @@ export const DoadoraUpdate = () => {
     }
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    let maskedValue = value;
+  const validateForm = (showToast = false) => {
+    const camposObrigatorios = {
+      CPF: formData.cpf?.trim(),
+      CEP: formData.cep?.trim(),
+      Telefone: formData.telefone?.trim(),
+      'Nome Completo': formData.nome?.trim(),
+      'Cartão SUS': formData.cartaoSUS?.trim(),
+      'Data de Nascimento': formData.dataNascimento?.trim(),
+      Profissão: formData.profissao?.trim(),
+      Estado: formData.estado?.trim(),
+      Cidade: formData.cidade?.trim(),
+      Endereço: formData.endereco?.trim(),
+      'Tipo de Doadora': formData.tipoDoadora,
+      'Local do Pré-Natal': formData.localPreNatal,
+      'Resultado VDRL': formData.resultadoVDRL,
+      'Resultado HBsAg': formData.resultadoHBsAg,
+      'Resultado FTA-abs': formData.resultadoFTAabs,
+      'Resultado HIV': formData.resultadoHIV,
+    };
 
-    switch (field) {
-      case 'cpf':
-        maskedValue = maskCPF(value);
-        break;
-      case 'cep':
-        maskedValue = maskCEP(value);
-        break;
-      case 'telefone':
-        maskedValue = maskPhone(value);
-        break;
+    const camposVazios = Object.entries(camposObrigatorios)
+      .filter(([_, value]) => !value)
+      .map(([nome]) => nome);
+
+    // Validate specific format fields if they have values
+    const camposComFormato = [];
+    if (formData.cpf && !validateCPF(formData.cpf)) {
+      camposComFormato.push('CPF inválido');
+    }
+    if (formData.cep && !validateCEP(formData.cep)) {
+      camposComFormato.push('CEP inválido');
+    }
+    if (formData.telefone && !validatePhone(formData.telefone)) {
+      camposComFormato.push('Telefone inválido');
+    }
+    if (formData.dataNascimento) {
+      const today = new Date();
+      const birthDate = new Date(formData.dataNascimento);
+      const age = today.getFullYear() - birthDate.getFullYear();
+      if (age < 18) {
+        camposComFormato.push('Doadora deve ser maior de 18 anos');
+      }
+    }
+
+    if (showToast && camposVazios.length > 0) {
+      toast.info(`Preencha os campos obrigatórios: ${camposVazios.join(', ')}`);
+      setIsFormValid(false);
+      return false;
+    }
+
+    if (showToast && camposComFormato.length > 0) {
+      toast.info(`Corrija os seguintes campos: ${camposComFormato.join(', ')}`);
+      setIsFormValid(false);
+      return false;
+    }
+
+    const isValid = camposVazios.length === 0 && camposComFormato.length === 0;
+    setIsFormValid(isValid);
+    return isValid;
+  };
+
+  const handleInputChange = (field: string, value: string | boolean) => {
+    let processedValue = value;
+
+    // Apply masks only for specific fields
+    if (typeof value === 'string') {
+      switch (field) {
+        case 'cpf':
+          processedValue = maskCPF(value);
+          break;
+        case 'cep':
+          processedValue = maskCEP(value);
+          break;
+        case 'telefone':
+          processedValue = maskPhone(value);
+          break;
+      }
     }
 
     setFormData(prev => ({
       ...prev,
-      [field]: maskedValue,
+      [field]: processedValue,
     }));
 
     if (formErrors[field]) {
@@ -162,85 +252,26 @@ export const DoadoraUpdate = () => {
         [field]: '',
       }));
     }
+
+    // Validate form after each change without showing toast
+    setTimeout(() => validateForm(false), 100);
   };
 
   const handleCEPBlur = () => {
-    validateForm();
+    validateForm(false);
     if (formData.cep && validateCEP(formData.cep)) {
       fetchAddressFromCEP(formData.cep);
+    } else if (formData.cep && !validateCEP(formData.cep)) {
+      toast.info('CEP inválido. Deve conter 8 dígitos.');
     }
-  };
-
-  const validateForm = () => {
-    const errors = {
-      cpf: '',
-      cep: '',
-      telefone: '',
-      nome: '',
-      dataNascimento: '',
-      estado: '',
-      cidade: '',
-      endereco: '',
-    };
-
-    // Validate CPF
-    if (!formData.cpf) {
-      errors.cpf = validationMessages.cpf.required;
-    } else if (!validateCPF(formData.cpf)) {
-      errors.cpf = validationMessages.cpf.invalid;
-    }
-
-    // Validate CEP
-    if (!formData.cep) {
-      errors.cep = validationMessages.cep.required;
-    } else if (!validateCEP(formData.cep)) {
-      errors.cep = validationMessages.cep.invalid;
-    }
-
-    // Validate Phone
-    if (!formData.telefone) {
-      errors.telefone = validationMessages.phone.required;
-    } else if (!validatePhone(formData.telefone)) {
-      errors.telefone = validationMessages.phone.invalid;
-    }
-
-    // Validate other required fields from form
-    const nomeField = document.getElementById('doadora-nome') as HTMLInputElement;
-    const dataNascimentoField = document.getElementById('doadora-dataNascimento') as HTMLInputElement;
-    const estadoField = document.getElementById('doadora-estado') as HTMLInputElement;
-    const cidadeField = document.getElementById('doadora-cidade') as HTMLInputElement;
-    const enderecoField = document.getElementById('doadora-endereco') as HTMLInputElement;
-
-    if (!nomeField?.value?.trim()) {
-      errors.nome = 'Nome é obrigatório';
-    }
-
-    if (!dataNascimentoField?.value) {
-      errors.dataNascimento = 'Data de nascimento é obrigatória';
-    }
-
-    if (!estadoField?.value?.trim()) {
-      errors.estado = 'Estado é obrigatório';
-    }
-
-    if (!cidadeField?.value?.trim()) {
-      errors.cidade = 'Cidade é obrigatória';
-    }
-
-    if (!enderecoField?.value?.trim()) {
-      errors.endereco = 'Endereço é obrigatório';
-    }
-
-    setFormErrors(errors);
-    return !Object.values(errors).some(error => error !== '');
   };
 
   const saveEntity = values => {
-    console.log('Form values:', values);
+    console.log('Form values from ValidatedForm:', values);
+    console.log('Current formData state:', formData);
 
-    const isFormValid = validateForm();
+    const isFormValid = validateForm(true); // Show toast messages when submitting
     console.log('Form is valid:', isFormValid);
-    console.log('Form errors:', formErrors);
 
     if (!isFormValid) {
       console.log('Form validation failed');
@@ -251,8 +282,14 @@ export const DoadoraUpdate = () => {
       values.id = Number(values.id);
     }
 
-    const cleanedValues = {
+    // Merge form state with form values, prioritizing current state for controlled fields
+    const mergedValues = {
       ...values,
+      ...formData, // This ensures all state data is included
+    };
+
+    const cleanedValues = {
+      ...mergedValues,
       cpf: removeMask(formData.cpf || ''),
       cep: removeMask(formData.cep || ''),
       telefone: removeMask(formData.telefone || ''),
@@ -264,43 +301,35 @@ export const DoadoraUpdate = () => {
       ...cleanedValues,
     };
 
-    console.log('Saving entity:', entity);
-
     if (isNew) {
-      dispatch(createEntity(entity));
+      dispatch(createEntity(entity))
+        .unwrap()
+        .then(() => {
+          handleClose();
+        })
+        .catch(error => {
+          toast.error('Erro ao criar doadora:', error);
+          setFormErrors(prev => ({
+            ...prev,
+            cpf: error,
+          }));
+        });
     } else {
-      dispatch(updateEntity(entity));
+      dispatch(updateEntity(entity))
+        .unwrap()
+        .then(() => {
+          handleClose();
+        })
+        .catch(error => {
+          toast.error('Erro ao atualizar doadora:', error);
+        });
     }
   };
 
   const defaultValues = () => {
-    const baseValues = isNew
-      ? {
-          tipoDoadora: 'DOMICILIAR',
-          localPreNatal: 'REDE_PUBLICA',
-          resultadoVDRL: 'NEGATIVO',
-          resultadoHBsAg: 'NEGATIVO',
-          resultadoFTAabs: 'NEGATIVO',
-          resultadoHIV: 'NEGATIVO',
-          transfusaoUltimos5Anos: false,
-          cpf: formData.cpf,
-          cep: formData.cep,
-          telefone: formData.telefone,
-        }
-      : {
-          tipoDoadora: 'DOMICILIAR',
-          localPreNatal: 'REDE_PUBLICA',
-          resultadoVDRL: 'POSITIVO',
-          resultadoHBsAg: 'POSITIVO',
-          resultadoFTAabs: 'POSITIVO',
-          resultadoHIV: 'POSITIVO',
-          ...doadoraEntity,
-          cpf: formData.cpf,
-          cep: formData.cep,
-          telefone: formData.telefone,
-        };
-
-    return baseValues;
+    return {
+      ...formData,
+    };
   };
 
   return (
@@ -323,23 +352,11 @@ export const DoadoraUpdate = () => {
               </div>
             ) : (
               <ValidatedForm defaultValues={defaultValues()} onSubmit={saveEntity}>
-                {!isNew ? (
-                  <ValidatedField
-                    name="id"
-                    required
-                    readOnly
-                    id="doadora-id"
-                    label="ID"
-                    validate={{ required: true }}
-                    style={{ display: 'none' }}
-                  />
-                ) : null}
-
                 <PersonalInfoSection
                   formData={formData}
                   formErrors={formErrors}
                   handleInputChange={handleInputChange}
-                  validateForm={validateForm}
+                  validateForm={() => validateForm(false)}
                 />
 
                 <AddressSection
@@ -350,16 +367,16 @@ export const DoadoraUpdate = () => {
                   addressLoading={addressLoading}
                 />
 
-                <MedicalInfoSection />
+                <MedicalInfoSection formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} />
 
-                <ExamResultsSection />
+                <ExamResultsSection formData={formData} formErrors={formErrors} handleInputChange={handleInputChange} />
 
                 <div className="d-flex justify-content-between align-items-center">
                   <Button tag={Link} to="/doadora" color="secondary" size="lg">
                     <FontAwesomeIcon icon="times" className="me-2" />
                     Cancelar
                   </Button>
-                  <Button color="primary" type="submit" disabled={updating} size="lg">
+                  <Button color="primary" type="submit" disabled={updating || !isFormValid} size="lg">
                     <FontAwesomeIcon icon="save" className="me-2" />
                     {updating ? 'Salvando...' : 'Salvar'}
                   </Button>
