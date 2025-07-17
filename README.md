@@ -1,236 +1,216 @@
-# leiteVida
+# 🍼 Sistema Web de Gerenciamento de Banco de Leite Humano Materno
 
-This application was generated using JHipster 8.11.0, you can find documentation and help at [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0).
+Este repositório contém o projeto de sistema web desenvolvido como Trabalho de Conclusão de Curso (TCC) para o curso superior de **Análise e Desenvolvimento de Sistemas** do Instituto Federal de Educação, Ciência e Tecnologia de Sergipe (IFS) - Campus Aracaju.
 
-## Project Structure
+O sistema visa otimizar a gestão de um Banco de Leite Humano Materno (BLH), abordando os desafios operacionais e a necessidade de rastreabilidade do leite.
 
-Node is required for generation and recommended for development. `package.json` is always generated for a better development experience with prettier, commit hooks, scripts and so on.
+---
 
-In the project root, JHipster generates configuration files for tools like git, prettier, eslint, husky, and others that are well known and you can find references in the web.
+## 🧩 Sobre o Projeto
 
-`/src/*` structure follows default Java structure.
+Os Bancos de Leite Humano (BLH) desempenham um papel crucial na promoção do aleitamento materno e na nutrição neonatal, contribuindo significativamente para a redução da mortalidade infantil.
 
-- `.yo-rc.json` - Yeoman configuration file
-  JHipster configuration is stored in this file at `generator-jhipster` key. You may find `generator-jhipster-*` for specific blueprints configuration.
-- `.yo-resolve` (optional) - Yeoman conflict resolver
-  Allows to use a specific action when conflicts are found skipping prompts for files that matches a pattern. Each line should match `[pattern] [action]` with pattern been a [Minimatch](https://github.com/isaacs/minimatch#minimatch) pattern and action been one of skip (default if omitted) or force. Lines starting with `#` are considered comments and are ignored.
-- `.jhipster/*.json` - JHipster entity configuration files
+Este projeto propõe uma solução web para informatizar a gestão de coletas, processamentos e distribuições de leite humano, oferecendo um ambiente estruturado e seguro para o controle interno de um BLH.
 
-- `npmw` - wrapper to use locally installed npm.
-  JHipster installs Node and npm locally using the build tool by default. This wrapper makes sure npm is installed locally and uses it avoiding some differences different versions can cause. By using `./npmw` instead of the traditional `npm` you can configure a Node-less environment to develop or test your application.
-- `/src/main/docker` - Docker configurations for the application and services that the application depends on
+---
 
-## Development
+## ✅ Funcionalidades Principais
 
-The build system will install automatically the recommended version of Node and npm.
+### 🔐 Módulo de Acesso e Usuários (Administrador)
 
-We provide a wrapper to launch npm.
-You will only need to run this command when dependencies change in [package.json](package.json).
+- **Cadastro de Usuário**
+- **Login e Recuperação de Senha**
+- **Edição e Exclusão de Usuários**
+- **Listagem de Usuários**
 
+### 👩‍⚕️ Gerenciamento de Doadoras (Enfermeira)
+
+- **Cadastro, Edição e Listagem de Doadoras**
+- **Cadastro Integrado com Coleta**
+
+### 🧑‍⚕️ Gerenciamento de Pacientes (Enfermeira)
+
+- **Cadastro, Edição e Listagem de Pacientes**
+
+### 🧪 Coletas e Processamento (Enfermeira e Laboratório)
+
+- **Cadastro de Coletas**
+- **Avaliação Microbiológica do Leite**
+- **Rastreabilidade Completa (doadora → paciente)**
+
+### 🧊 Gerenciamento de Estoque (Enfermeira e Laboratório)
+
+- **Visualização e Filtros por Status/Tipo**
+- **Controle de Validade**
+- **Registros de Descarte Automatizados**
+
+### 📦 Gerenciamento de Distribuições (Enfermeira)
+
+- **Cadastro de Distribuições com base em prescrição**
+- **Prescrição Médica com volume e frequência**
+
+---
+
+## 💡 Usabilidade e Desempenho
+
+- Interface intuitiva e responsiva
+- Feedback visual em tempo real
+- Rápido tempo de resposta
+
+---
+
+## 🔒 Segurança
+
+- Autenticação com base em perfis (Administrador, Enfermeira, Laboratório)
+- Confidencialidade de dados sensíveis
+
+---
+
+## 📊 Relatórios e Dashboard
+
+- Relatórios de doações, coletas e distribuições
+- Dashboard com indicadores:
+  - Volume total em estoque
+  - Volume em análise
+  - Doadoras ativas
+  - Total de coletas realizadas
+
+---
+
+## 🛠️ Modelagem do Sistema
+
+- **Elicitação de Requisitos**
+- **Casos de Uso (UML)**
+- **Diagramas BPMN**
+- **Diagrama Entidade-Relacionamento (DER)**
+- **Dicionarização do DER**
+- **Diagrama de Classes**
+
+---
+
+## 🎨 Protótipo da Interface
+
+O sistema foi prototipado com foco em **usabilidade**, **acessibilidade** e **responsividade**, garantindo uma navegação fluida e intuitiva. A tela de login é um exemplo do design proposto.
+
+---
+
+## 🚀 Como Rodar o Projeto
+
+This application was generated using JHipster **8.11.0**. For full documentation, visit:  
+📚 [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0)
+
+### ⚙️ Requisitos
+
+- Java 17+
+- Node.js (configurado automaticamente com `./npmw`)
+- Docker (para serviços externos opcionais)
+- Gradle
+
+---
+
+### 📦 Instalação
+
+Clone o repositório:
+
+```bash
+git clone https://github.com/seu-usuario/leite-vida.git
+cd leite-vida
 ```
+
+Instale as dependências:
+
+```bash
 ./npmw install
 ```
 
-We use npm scripts and [Webpack][] as our build system.
+---
 
-Run the following commands in two separate terminals to create a blissful development experience where your browser
-auto-refreshes when files change on your hard drive.
+### 💻 Ambiente de Desenvolvimento
 
-```
+Execute os comandos abaixo **em dois terminais diferentes**:
+
+```bash
 ./gradlew -x webapp
+```
+
+```bash
 ./npmw start
 ```
 
-Npm is also used to manage CSS and JavaScript dependencies used in this application. You can upgrade dependencies by
-specifying a newer version in [package.json](package.json). You can also run `./npmw update` and `./npmw install` to manage dependencies.
-Add the `help` flag on any command to see how you can use it. For example, `./npmw help update`.
+---
 
-The `./npmw run` command will list all the scripts available to run for this project.
+### 📦 Build para Produção
 
-### PWA Support
-
-JHipster ships with PWA (Progressive Web App) support, and it's turned off by default. One of the main components of a PWA is a service worker.
-
-The service worker initialization code is commented out by default. To enable it, uncomment the following code in `src/main/webapp/index.html`:
-
-```html
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./service-worker.js').then(function () {
-      console.log('Service Worker Registered');
-    });
-  }
-</script>
-```
-
-Note: [Workbox](https://developers.google.com/web/tools/workbox/) powers JHipster's service worker. It dynamically generates the `service-worker.js` file.
-
-### Managing dependencies
-
-For example, to add [Leaflet][] library as a runtime dependency of your application, you would run following command:
-
-```
-./npmw install --save --save-exact leaflet
-```
-
-To benefit from TypeScript type definitions from [DefinitelyTyped][] repository in development, you would run following command:
-
-```
-./npmw install --save-dev --save-exact @types/leaflet
-```
-
-Then you would import the JS and CSS files specified in library's installation instructions so that [Webpack][] knows about them:
-Note: There are still a few other things remaining to do for Leaflet that we won't detail here.
-
-For further instructions on how to develop with JHipster, have a look at [Using JHipster in development][].
-
-## Building for production
-
-### Packaging as jar
-
-To build the final jar and optimize the leiteVida application for production, run:
-
-```
+```bash
 ./gradlew -Pprod clean bootJar
-```
-
-This will concatenate and minify the client CSS and JavaScript files. It will also modify `index.html` so it references these new files.
-To ensure everything worked, run:
-
-```
 java -jar build/libs/*.jar
 ```
 
-Then navigate to [http://localhost:8080](http://localhost:8080) in your browser.
+Acesse o sistema em: [http://localhost:8080](http://localhost:8080)
 
-Refer to [Using JHipster in production][] for more details.
+---
 
-### Packaging as war
+### 🧪 Executar Testes
 
-To package your application as a war in order to deploy it to an application server, run:
+#### Backend (Spring Boot)
 
-```
-./gradlew -Pprod -Pwar clean bootWar
-```
-
-### JHipster Control Center
-
-JHipster Control Center can help you manage and control your application(s). You can start a local control center server (accessible on http://localhost:7419) with:
-
-```
-docker compose -f src/main/docker/jhipster-control-center.yml up
-```
-
-## Testing
-
-### Spring Boot tests
-
-To launch your application's tests, run:
-
-```
+```bash
 ./gradlew test integrationTest jacocoTestReport
 ```
 
-### Client tests
+#### Frontend (React - Jest)
 
-Unit tests are run by [Jest][]. They're located near components and can be run with:
-
-```
+```bash
 ./npmw test
 ```
 
-## Others
+---
 
-### Code quality using Sonar
+### 🐳 Docker (Serviços Externos)
 
-Sonar is used to analyse code quality. You can start a local Sonar server (accessible on http://localhost:9001) with:
-
-```
-docker compose -f src/main/docker/sonar.yml up -d
-```
-
-Note: we have turned off forced authentication redirect for UI in [src/main/docker/sonar.yml](src/main/docker/sonar.yml) for out of the box experience while trying out SonarQube, for real use cases turn it back on.
-
-You can run a Sonar analysis with using the [sonar-scanner](https://docs.sonarqube.org/display/SCAN/Analyzing+with+SonarQube+Scanner) or by using the gradle plugin.
-
-Then, run a Sonar analysis:
-
-```
-./gradlew -Pprod clean check jacocoTestReport sonarqube -Dsonar.login=admin -Dsonar.password=admin
-```
-
-Additionally, Instead of passing `sonar.password` and `sonar.login` as CLI arguments, these parameters can be configured from [sonar-project.properties](sonar-project.properties) as shown below:
-
-```
-sonar.login=admin
-sonar.password=admin
-```
-
-For more information, refer to the [Code quality page][].
-
-### Docker Compose support
-
-JHipster generates a number of Docker Compose configuration files in the [src/main/docker/](src/main/docker/) folder to launch required third party services.
-
-For example, to start required services in Docker containers, run:
-
-```
+```bash
 docker compose -f src/main/docker/services.yml up -d
 ```
 
-To stop and remove the containers, run:
+Para parar:
 
-```
+```bash
 docker compose -f src/main/docker/services.yml down
 ```
 
-[Spring Docker Compose Integration](https://docs.spring.io/spring-boot/reference/features/dev-services.html) is enabled by default. It's possible to disable it in application.yml:
+---
 
-```yaml
-spring:
-  ...
-  docker:
-    compose:
-      enabled: false
+### 🧠 Análise de Qualidade com SonarQube
+
+```bash
+docker compose -f src/main/docker/sonar.yml up -d
+
+./gradlew -Pprod clean check jacocoTestReport sonarqube \
+  -Dsonar.login=admin -Dsonar.password=admin
 ```
 
-You can also fully dockerize your application and all the services that it depends on.
-To achieve this, first build a Docker image of your app by running:
+---
 
-```sh
-npm run java:docker
+### 🧪 CI/CD (opcional)
+
+Gere arquivos para CI com:
+
+```bash
+jhipster ci-cd
 ```
 
-Or build a arm64 Docker image when using an arm64 processor os like MacOS with M1 processor family running:
+---
 
-```sh
-npm run java:docker:arm64
-```
+## 🤝 Contribuição
 
-Then run:
+Este é um **projeto individual de TCC**, mas contribuições futuras são **bem-vindas** para evolução e aprimoramento da aplicação.
 
-```sh
-docker compose -f src/main/docker/app.yml up -d
-```
+---
 
-For more information refer to [Using Docker and Docker-Compose][], this page also contains information on the Docker Compose sub-generator (`jhipster docker-compose`), which is able to generate Docker configurations for one or several JHipster applications.
+## 📛 Licença
 
-## Continuous Integration (optional)
+Este projeto é de código aberto, mas orientado por fins acadêmicos. Consulte o autor para uso em produção.
 
-To configure CI for your project, run the ci-cd sub-generator (`jhipster ci-cd`), this will let you generate configuration files for a number of Continuous Integration systems. Consult the [Setting up Continuous Integration][] page for more information.
+---
 
-[JHipster Homepage and latest documentation]: https://www.jhipster.tech
-[JHipster 8.11.0 archive]: https://www.jhipster.tech/documentation-archive/v8.11.0
-[Using JHipster in development]: https://www.jhipster.tech/documentation-archive/v8.11.0/development/
-[Using Docker and Docker-Compose]: https://www.jhipster.tech/documentation-archive/v8.11.0/docker-compose
-[Using JHipster in production]: https://www.jhipster.tech/documentation-archive/v8.11.0/production/
-[Running tests page]: https://www.jhipster.tech/documentation-archive/v8.11.0/running-tests/
-[Code quality page]: https://www.jhipster.tech/documentation-archive/v8.11.0/code-quality/
-[Setting up Continuous Integration]: https://www.jhipster.tech/documentation-archive/v8.11.0/setting-up-ci/
-[Node.js]: https://nodejs.org/
-[NPM]: https://www.npmjs.com/
-[Webpack]: https://webpack.github.io/
-[BrowserSync]: https://www.browsersync.io/
-[Jest]: https://jestjs.io
-[Leaflet]: https://leafletjs.com/
-[DefinitelyTyped]: https://definitelytyped.org/
+## 📌 #leiteVida
