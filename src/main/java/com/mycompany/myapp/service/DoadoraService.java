@@ -99,4 +99,8 @@ public class DoadoraService {
     public long contarDoadoras() {
         return doadoraRepository.count();
     }
+
+    public boolean existsByCpf(String cpf) {
+        return doadoraRepository.existsByCpf(cpf);
+    }
 }

@@ -9,4 +9,6 @@ import org.springframework.stereotype.Repository;
  */
 @SuppressWarnings("unused")
 @Repository
-public interface DoadoraRepository extends JpaRepository<Doadora, Long>, JpaSpecificationExecutor<Doadora> {}
+public interface DoadoraRepository extends JpaRepository<Doadora, Long>, JpaSpecificationExecutor<Doadora> {
+    boolean existsByCpf(String cpf);
+}
