@@ -34,6 +34,7 @@ export const DoadoraUpdate = () => {
   const loading = useAppSelector(state => state.doadora.loading);
   const updating = useAppSelector(state => state.doadora.updating);
   const updateSuccess = useAppSelector(state => state.doadora.updateSuccess);
+  const errorMessage = useAppSelector(state => state.doadora.errorMessage);
 
   const [formData, setFormData] = useState({
     cpf: '',
@@ -144,7 +145,6 @@ export const DoadoraUpdate = () => {
         cep: '',
       }));
 
-      // Update form state instead of direct DOM manipulation
       setFormData(prev => ({
         ...prev,
         estado: endereco.uf || '',
@@ -226,7 +226,6 @@ export const DoadoraUpdate = () => {
   const handleInputChange = (field: string, value: string | boolean) => {
     let processedValue = value;
 
-    // Apply masks only for specific fields
     if (typeof value === 'string') {
       switch (field) {
         case 'cpf':
@@ -253,7 +252,6 @@ export const DoadoraUpdate = () => {
       }));
     }
 
-    // Validate form after each change without showing toast
     setTimeout(() => validateForm(false), 100);
   };
 
@@ -270,7 +268,7 @@ export const DoadoraUpdate = () => {
     console.log('Form values from ValidatedForm:', values);
     console.log('Current formData state:', formData);
 
-    const isFormValid = validateForm(true); // Show toast messages when submitting
+    const isFormValid = validateForm(true);
     console.log('Form is valid:', isFormValid);
 
     if (!isFormValid) {
@@ -282,10 +280,9 @@ export const DoadoraUpdate = () => {
       values.id = Number(values.id);
     }
 
-    // Merge form state with form values, prioritizing current state for controlled fields
     const mergedValues = {
       ...values,
-      ...formData, // This ensures all state data is included
+      ...formData,
     };
 
     const cleanedValues = {
@@ -308,11 +305,26 @@ export const DoadoraUpdate = () => {
           handleClose();
         })
         .catch(error => {
-          toast.error('Erro ao criar doadora:', error);
-          setFormErrors(prev => ({
-            ...prev,
-            cpf: error,
-          }));
+          console.error('Error creating doadora:', error);
+
+          if (
+            error === 'CPF já existe no sistema' ||
+            (typeof error === 'string' &&
+              (error.includes('CPF já cadastrado') ||
+                error.includes('cpfexists') ||
+                error.includes('ux_doadora__cpf') ||
+                error.includes('duplicar valor da chave') ||
+                error.includes('Chave (cpf)') ||
+                error.includes('já existe')))
+          ) {
+            toast.error('CPF de doadora já existe no sistema');
+            setFormErrors(prev => ({
+              ...prev,
+              cpf: 'CPF já existe no sistema',
+            }));
+          } else {
+            toast.error('Erro ao criar doadora');
+          }
         });
     } else {
       dispatch(updateEntity(entity))
@@ -321,7 +333,7 @@ export const DoadoraUpdate = () => {
           handleClose();
         })
         .catch(error => {
-          toast.error('Erro ao atualizar doadora:', error);
+          toast.error('Erro ao atualizar doadora');
         });
     }
   };

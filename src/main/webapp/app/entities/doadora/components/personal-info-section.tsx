@@ -76,11 +76,13 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ formDa
               onBlur={handleCPFBlur}
               maxLength={14}
               placeholder="000.000.000-00"
+              invalid={!!formErrors.cpf}
               validate={{
                 required: { value: true, message: 'CPF é obrigatório' },
                 validate: value => validateCPF(value) || 'CPF inválido',
               }}
             />
+            {formErrors.cpf && <div className="invalid-feedback d-block">{formErrors.cpf}</div>}
           </Col>
         </Row>
         <Row>
