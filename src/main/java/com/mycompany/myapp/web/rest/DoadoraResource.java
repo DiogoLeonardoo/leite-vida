@@ -1,5 +1,6 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.Doadora;
 import com.mycompany.myapp.repository.DoadoraRepository;
 import com.mycompany.myapp.service.DoadoraQueryService;
 import com.mycompany.myapp.service.DoadoraService;
@@ -222,5 +223,10 @@ public class DoadoraResource {
     @GetMapping("/count-doadora")
     public long contarDoadoras() {
         return doadoraService.contarDoadoras();
+    }
+
+    @GetMapping("/buscar-doadoras")
+    public Page<Doadora> buscarDoadoras(@RequestParam(required = false, defaultValue = "") String search, Pageable pageable) {
+        return doadoraService.buscarDoadoras(search, pageable);
     }
 }
