@@ -7,6 +7,8 @@ import com.mycompany.myapp.service.mapper.DoadoraMapper;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -102,5 +104,9 @@ public class DoadoraService {
 
     public boolean existsByCpf(String cpf) {
         return doadoraRepository.existsByCpf(cpf);
+    }
+
+    public Page<Doadora> buscarDoadoras(String search, Pageable pageable) {
+        return doadoraRepository.searchByNomeOrCpf(search, pageable);
     }
 }
