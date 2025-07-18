@@ -145,11 +145,12 @@ public class UserService {
         } else {
             user.setLangKey(userDTO.getLangKey());
         }
-        String encryptedPassword = passwordEncoder.encode(RandomUtil.generatePassword());
+        String encryptedPassword = passwordEncoder.encode("leitevida123");
         user.setPassword(encryptedPassword);
         user.setResetKey(RandomUtil.generateResetKey());
         user.setResetDate(Instant.now());
         user.setActivated(true);
+        user.setMustChangePassword(true); // Force password change on first login
         if (userDTO.getAuthorities() != null) {
             Set<Authority> authorities = userDTO
                 .getAuthorities()
@@ -211,7 +212,8 @@ public class UserService {
     }
 
     /**
-     * Update basic information (first name, last name, email, language) for the current user.
+     * Update basic information (first name, last name, email, language) for the
+     * current user.
      *
      * @param firstName first name of user.
      * @param lastName  last name of user.
@@ -287,10 +289,37 @@ public class UserService {
 
     /**
      * Gets a list of all the authorities.
+     *
      * @return a list of all the authorities.
      */
     @Transactional(readOnly = true)
     public List<String> getAuthorities() {
         return authorityRepository.findAll().stream().map(Authority::getName).toList();
+    }
+
+    @Transactional
+    public Optional<User> resetPasswordToDefault(String login) {
+        return userRepository
+            .findOneByLogin(login)
+            .map(user -> {
+                String defaultPassword = "leitevida123";
+                user.setPassword(passwordEncoder.encode(defaultPassword));
+                user.setMustChangePassword(true); // Force password change
+                userRepository.save(user);
+                return user;
+            });
+    }
+
+    @Transactional
+    public void changePasswordOnFirstLogin(String newPassword) {
+        SecurityUtils.getCurrentUserLogin()
+            .flatMap(userRepository::findOneByLogin)
+            .ifPresent(user -> {
+                String encryptedPassword = passwordEncoder.encode(newPassword);
+                user.setPassword(encryptedPassword);
+                user.setMustChangePassword(false); // Clear the flag
+                userRepository.save(user);
+                LOG.debug("Changed password for User on first login: {}", user);
+            });
     }
 }
