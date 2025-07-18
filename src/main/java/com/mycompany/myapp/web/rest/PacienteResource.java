@@ -1,5 +1,7 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.Doadora;
+import com.mycompany.myapp.domain.Paciente;
 import com.mycompany.myapp.repository.PacienteRepository;
 import com.mycompany.myapp.service.PacienteQueryService;
 import com.mycompany.myapp.service.PacienteService;
@@ -201,5 +203,10 @@ public class PacienteResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @GetMapping("/buscar-pacientes")
+    public Page<Paciente> buscarDoadoras(@RequestParam(required = false, defaultValue = "") String search, Pageable pageable) {
+        return pacienteService.buscarPacientes(search, pageable);
     }
 }
