@@ -42,6 +42,9 @@ export const UserManagement = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [resetLoading, setResetLoading] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -158,6 +161,40 @@ export const UserManagement = () => {
     }
   };
 
+  const handleDeleteUser = user => {
+    setUserToDelete(user);
+    setDeleteModalOpen(true);
+  };
+
+  const toggleDeleteModal = () => {
+    setDeleteModalOpen(!deleteModalOpen);
+    if (!deleteModalOpen) {
+      setUserToDelete(null);
+    }
+  };
+
+  const confirmDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      await axios.delete(`/api/admin/users/${userToDelete.login}`);
+
+      toast.info('Usuário excluído com sucesso!');
+      toggleDeleteModal();
+      handleSyncList(); // Refresh the user list
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      if (error.response?.status === 401) {
+        toast.error('Erro de autorização. Verifique se você tem permissões de administrador.');
+      } else {
+        toast.error('Erro ao excluir o usuário. Tente novamente.');
+      }
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const account = useAppSelector(state => state.authentication.account);
   const users = useAppSelector(state => state.userManagement.users);
   const totalItems = useAppSelector(state => state.userManagement.totalItems);
@@ -261,10 +298,16 @@ export const UserManagement = () => {
                       <FontAwesomeIcon icon={faLock} />
                       <span className="d-none d-md-inline"></span>
                     </Button>
-                    <Button tag={Link} to={`${user.login}/edit`} color="primary" size="sm">
+                    <Button tag={Link} to={`${user.login}/edit`} color="primary" size="sm" title="Editar">
                       <FontAwesomeIcon icon="pencil-alt" />{' '}
                     </Button>
-                    <Button tag={Link} to={`${user.login}/delete`} color="danger" size="sm" disabled={account.login === user.login}>
+                    <Button
+                      onClick={() => handleDeleteUser(user)}
+                      color="danger"
+                      size="sm"
+                      disabled={account.login === user.login}
+                      title="Excluir"
+                    >
                       <FontAwesomeIcon icon="trash" />{' '}
                     </Button>
                   </div>
@@ -298,6 +341,7 @@ export const UserManagement = () => {
         ''
       )}
 
+      {/* Modal para resetar senha */}
       <Modal isOpen={modalOpen} toggle={toggleModal} centered>
         <ModalHeader toggle={toggleModal} className="bg-primary text-white">
           <FontAwesomeIcon icon={faLock} className="me-2" />
@@ -333,6 +377,49 @@ export const UserManagement = () => {
             </Button>
           </ModalFooter>
         </Form>
+      </Modal>
+
+      {/* Modal para confirmar exclusão */}
+      <Modal isOpen={deleteModalOpen} toggle={toggleDeleteModal} centered>
+        <ModalHeader toggle={toggleDeleteModal} className="bg-danger text-white">
+          <FontAwesomeIcon icon="trash" className="me-2" />
+          Confirmar Exclusão
+        </ModalHeader>
+        <ModalBody>
+          <div className="text-center">
+            <FontAwesomeIcon icon="exclamation-triangle" size="3x" className="text-warning mb-3" />
+            <h5>Tem certeza que deseja excluir este usuário?</h5>
+            <div className="mt-3 p-3 bg-light rounded">
+              <strong>Usuário:</strong> {userToDelete?.firstName} {userToDelete?.lastName}
+              <br />
+              <strong>Login:</strong> {userToDelete?.login}
+              <br />
+              <strong>Email:</strong> {userToDelete?.email}
+            </div>
+            <div className="alert alert-warning mt-3">
+              <FontAwesomeIcon icon="exclamation-triangle" className="me-2" />
+              <strong>Atenção:</strong> Esta ação não pode ser desfeita!
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button type="button" color="secondary" onClick={toggleDeleteModal} disabled={deleteLoading}>
+            Cancelar
+          </Button>
+          <Button color="danger" onClick={confirmDeleteUser} disabled={deleteLoading}>
+            {deleteLoading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                Excluindo...
+              </>
+            ) : (
+              <>
+                <FontAwesomeIcon icon="trash" className="me-1" />
+                Confirmar Exclusão
+              </>
+            )}
+          </Button>
+        </ModalFooter>
       </Modal>
     </div>
   );
