@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table } from 'reactstrap';
+import { Button, Row, Table, Input, InputGroup, InputGroupText } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
-import { useAppDispatch, useAppSelector } from 'app/config/store';
-
-import { getEntities } from './paciente.reducer';
+import { useAppDispatch } from 'app/config/store';
+import axios from 'axios';
+import './paciente.scss';
 
 export const Paciente = () => {
   const dispatch = useAppDispatch();
@@ -20,54 +20,95 @@ export const Paciente = () => {
   const [paginationState, setPaginationState] = useState(
     overridePaginationStateWithQueryParams(getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'), pageLocation.search),
   );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const pacienteList = useAppSelector(state => state.paciente.entities);
-  const loading = useAppSelector(state => state.paciente.loading);
-  const totalItems = useAppSelector(state => state.paciente.totalItems);
+  const [pacienteList, setPacienteList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const getAllEntities = () => {
-    dispatch(
-      getEntities({
-        page: paginationState.activePage - 1,
-        size: paginationState.itemsPerPage,
-        sort: `${paginationState.sort},${paginationState.order}`,
-      }),
-    );
-  };
+  // Debounce for search filter
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPaginationState(prev => ({
+        ...prev,
+        activePage: 1, // Reset page when searching
+      }));
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  const sortEntities = () => {
-    getAllEntities();
-    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
-    if (pageLocation.search !== endURL) {
-      navigate(`${pageLocation.pathname}${endURL}`);
+  const fetchPacientes = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/pacientes/buscar-pacientes', {
+        params: {
+          page: paginationState.activePage - 1,
+          size: paginationState.itemsPerPage,
+          sort: `${paginationState.sort},${paginationState.order}`,
+          search: debouncedSearchTerm || undefined,
+        },
+      });
+
+      // Handle the nested content array in the response
+      const responseData = response.data;
+      const pacientes = responseData.content || responseData;
+
+      setPacienteList(pacientes);
+
+      // Get total count from either the response headers or the response itself
+      const totalCount = responseData.totalElements || parseInt(response.headers['x-total-count'], 10);
+      setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+    } catch (error) {
+      console.error('Error fetching pacientes:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    sortEntities();
-  }, [paginationState.activePage, paginationState.order, paginationState.sort]);
+    fetchPacientes();
+  }, [debouncedSearchTerm, paginationState.activePage, paginationState.order, paginationState.sort]);
 
   useEffect(() => {
     const params = new URLSearchParams(pageLocation.search);
     const page = params.get('page');
     const sort = params.get(SORT);
+    const search = params.get('search');
+
     if (page && sort) {
       const sortSplit = sort.split(',');
-      setPaginationState({
-        ...paginationState,
+      setPaginationState(prev => ({
+        ...prev,
         activePage: +page,
         sort: sortSplit[0],
         order: sortSplit[1],
-      });
+      }));
+    }
+
+    if (search && search !== searchTerm) {
+      setSearchTerm(search);
     }
   }, [pageLocation.search]);
 
-  const sort = p => () => {
-    setPaginationState({
-      ...paginationState,
-      order: paginationState.order === ASC ? DESC : ASC,
-      sort: p,
-    });
+  useEffect(() => {
+    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}${debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : ''}`;
+    if (pageLocation.search !== endURL) {
+      navigate(`${pageLocation.pathname}${endURL}`);
+    }
+  }, [
+    paginationState.activePage,
+    paginationState.sort,
+    paginationState.order,
+    debouncedSearchTerm,
+    navigate,
+    pageLocation.pathname,
+    pageLocation.search,
+  ]);
+
+  const handleSearch = event => {
+    setSearchTerm(event.target.value);
   };
 
   const handlePagination = currentPage =>
@@ -76,8 +117,12 @@ export const Paciente = () => {
       activePage: currentPage,
     });
 
-  const handleSyncList = () => {
-    sortEntities();
+  const sort = p => () => {
+    setPaginationState({
+      ...paginationState,
+      order: paginationState.order === ASC ? DESC : ASC,
+      sort: p,
+    });
   };
 
   const getSortIconByFieldName = (fieldName: string) => {
@@ -90,107 +135,49 @@ export const Paciente = () => {
   };
 
   return (
-    <div>
-      <h2 id="paciente-heading" data-cy="PacienteHeading">
-        <Translate contentKey="leiteVidaApp.paciente.home.title">Pacientes</Translate>
-        <div className="d-flex justify-content-end">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
-            <FontAwesomeIcon icon="sync" spin={loading} />{' '}
-            <Translate contentKey="leiteVidaApp.paciente.home.refreshListLabel">Refresh List</Translate>
-          </Button>
-          <Link to="/paciente/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
-            <FontAwesomeIcon icon="plus" />
-            &nbsp;
-            <Translate contentKey="leiteVidaApp.paciente.home.createLabel">Create new Paciente</Translate>
-          </Link>
-        </div>
-      </h2>
+    <div className="paciente-list-page">
+      <Row>
+        <h2 className="paciente-list-title">
+          <Translate contentKey="leiteVidaApp.paciente.home.title">Pacientes</Translate>
+          <div className="d-flex align-items-center gap-3">
+            <InputGroup className="search-input">
+              <InputGroupText>
+                <FontAwesomeIcon icon="search" />
+              </InputGroupText>
+              <Input type="text" placeholder="Pesquisar pacientes..." value={searchTerm} onChange={handleSearch} />
+            </InputGroup>
+            <Link to="/paciente/new" className="btn btn-primary jh-create-entity">
+              <FontAwesomeIcon icon="plus" />
+              &nbsp; <Translate contentKey="leiteVidaApp.paciente.home.createLabel">Create new Paciente</Translate>
+            </Link>
+          </div>
+        </h2>
+      </Row>
       <div className="table-responsive">
         {pacienteList && pacienteList.length > 0 ? (
           <Table responsive>
             <thead>
               <tr>
-                <th className="hand" onClick={sort('id')}>
-                  <Translate contentKey="leiteVidaApp.paciente.id">ID</Translate> <FontAwesomeIcon icon={getSortIconByFieldName('id')} />
-                </th>
-                <th className="hand" onClick={sort('nome')}>
-                  <Translate contentKey="leiteVidaApp.paciente.nome">Nome</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('nome')} />
-                </th>
-                <th className="hand" onClick={sort('registroHospitalar')}>
-                  <Translate contentKey="leiteVidaApp.paciente.registroHospitalar">Registro Hospitalar</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('registroHospitalar')} />
-                </th>
-                <th className="hand" onClick={sort('dataNascimento')}>
-                  <Translate contentKey="leiteVidaApp.paciente.dataNascimento">Data Nascimento</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('dataNascimento')} />
-                </th>
-                <th className="hand" onClick={sort('pesoNascimento')}>
-                  <Translate contentKey="leiteVidaApp.paciente.pesoNascimento">Peso Nascimento</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('pesoNascimento')} />
-                </th>
-                <th className="hand" onClick={sort('idadeGestacional')}>
-                  <Translate contentKey="leiteVidaApp.paciente.idadeGestacional">Idade Gestacional</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('idadeGestacional')} />
-                </th>
-                <th className="hand" onClick={sort('condicaoClinica')}>
-                  <Translate contentKey="leiteVidaApp.paciente.condicaoClinica">Condicao Clinica</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('condicaoClinica')} />
-                </th>
-                <th className="hand" onClick={sort('nomeResponsavel')}>
-                  <Translate contentKey="leiteVidaApp.paciente.nomeResponsavel">Nome Responsavel</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('nomeResponsavel')} />
-                </th>
-                <th className="hand" onClick={sort('cpfResponsavel')}>
-                  <Translate contentKey="leiteVidaApp.paciente.cpfResponsavel">Cpf Responsavel</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('cpfResponsavel')} />
-                </th>
-                <th className="hand" onClick={sort('telefoneResponsavel')}>
-                  <Translate contentKey="leiteVidaApp.paciente.telefoneResponsavel">Telefone Responsavel</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('telefoneResponsavel')} />
-                </th>
-                <th className="hand" onClick={sort('parentescoResponsavel')}>
-                  <Translate contentKey="leiteVidaApp.paciente.parentescoResponsavel">Parentesco Responsavel</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('parentescoResponsavel')} />
-                </th>
-                <th className="hand" onClick={sort('statusAtivo')}>
-                  <Translate contentKey="leiteVidaApp.paciente.statusAtivo">Status Ativo</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('statusAtivo')} />
-                </th>
-                <th />
+                <th>Nome Paciente</th>
+                <th>Data de Nascimento</th>
+                <th>Contato Responsável</th>
+                <th>Nome Responsável</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {pacienteList.map((paciente, i) => (
                 <tr key={`entity-${i}`} data-cy="entityTable">
-                  <td>
-                    <Button tag={Link} to={`/paciente/${paciente.id}`} color="link" size="sm">
-                      {paciente.id}
-                    </Button>
-                  </td>
                   <td>{paciente.nome}</td>
-                  <td>{paciente.registroHospitalar}</td>
                   <td>
                     {paciente.dataNascimento ? (
                       <TextFormat type="date" value={paciente.dataNascimento} format={APP_LOCAL_DATE_FORMAT} />
                     ) : null}
                   </td>
-                  <td>{paciente.pesoNascimento}</td>
-                  <td>{paciente.idadeGestacional}</td>
-                  <td>{paciente.condicaoClinica}</td>
-                  <td>{paciente.nomeResponsavel}</td>
-                  <td>{paciente.cpfResponsavel}</td>
                   <td>{paciente.telefoneResponsavel}</td>
-                  <td>{paciente.parentescoResponsavel}</td>
-                  <td>{paciente.statusAtivo ? 'true' : 'false'}</td>
+                  <td>{paciente.nomeResponsavel}</td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`/paciente/${paciente.id}`} color="info" size="sm" data-cy="entityDetailsButton">
-                        <FontAwesomeIcon icon="eye" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.view">View</Translate>
-                        </span>
-                      </Button>
                       <Button
                         tag={Link}
                         to={`/paciente/${paciente.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
@@ -201,19 +188,6 @@ export const Paciente = () => {
                         <FontAwesomeIcon icon="pencil-alt" />{' '}
                         <span className="d-none d-md-inline">
                           <Translate contentKey="entity.action.edit">Edit</Translate>
-                        </span>
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          (window.location.href = `/paciente/${paciente.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`)
-                        }
-                        color="danger"
-                        size="sm"
-                        data-cy="entityDeleteButton"
-                      >
-                        <FontAwesomeIcon icon="trash" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.delete">Delete</Translate>
                         </span>
                       </Button>
                     </div>
