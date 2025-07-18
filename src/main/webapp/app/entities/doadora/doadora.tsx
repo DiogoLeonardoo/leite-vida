@@ -29,13 +29,12 @@ export const Doadora = () => {
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Debounce for search filter
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
       setPaginationState(prev => ({
         ...prev,
-        activePage: 1, // Reset page when searching
+        activePage: 1,
       }));
     }, 500);
     return () => clearTimeout(handler);
@@ -182,11 +181,7 @@ export const Doadora = () => {
             </tbody>
           </Table>
         ) : (
-          !loading && (
-            <div className="alert alert-warning">
-              <Translate contentKey="leiteVidaApp.doadora.home.notFound">No Doadoras found</Translate>
-            </div>
-          )
+          !loading && <div className="alert alert-warning">Não há Doadoras</div>
         )}
       </div>
       {totalItems ? (
