@@ -51,13 +51,11 @@ export const Paciente = () => {
         },
       });
 
-      // Handle the nested content array in the response
       const responseData = response.data;
       const pacientes = responseData.content || responseData;
 
       setPacienteList(pacientes);
 
-      // Get total count from either the response headers or the response itself
       const totalCount = responseData.totalElements || parseInt(response.headers['x-total-count'], 10);
       setTotalItems(isNaN(totalCount) ? 0 : totalCount);
     } catch (error) {

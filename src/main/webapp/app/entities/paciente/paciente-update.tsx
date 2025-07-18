@@ -34,7 +34,6 @@ export const PacienteUpdate = () => {
     cpfResponsavel: '',
     telefoneResponsavel: '',
     parentescoResponsavel: '',
-    statusAtivo: true,
   });
 
   const [formErrors, setFormErrors] = useState({
@@ -83,7 +82,6 @@ export const PacienteUpdate = () => {
         cpfResponsavel: pacienteEntity.cpfResponsavel ? maskCPF(pacienteEntity.cpfResponsavel) : '',
         telefoneResponsavel: pacienteEntity.telefoneResponsavel ? maskPhone(pacienteEntity.telefoneResponsavel) : '',
         parentescoResponsavel: pacienteEntity.parentescoResponsavel || '',
-        statusAtivo: pacienteEntity.statusAtivo !== undefined ? pacienteEntity.statusAtivo : true,
       });
     }
   }, [pacienteEntity, isNew]);
@@ -184,6 +182,7 @@ export const PacienteUpdate = () => {
       ...mergedValues,
       cpfResponsavel: removeMask(formData.cpfResponsavel || ''),
       telefoneResponsavel: removeMask(formData.telefoneResponsavel || ''),
+      statusAtivo: true,
     };
 
     const entity = {
@@ -370,7 +369,7 @@ export const PacienteUpdate = () => {
           <Col md={6}>
             <div className="form-group">
               <label htmlFor="paciente-nomeResponsavel">
-                <Translate contentKey="leiteVidaApp.paciente.nomeResponsavel">Nome do Responsável</Translate>
+                Nome do Responsável
                 <span className="text-danger">*</span>
               </label>
               <ValidatedField
@@ -390,7 +389,7 @@ export const PacienteUpdate = () => {
           <Col md={6}>
             <div className="form-group">
               <label htmlFor="paciente-parentescoResponsavel">
-                <Translate contentKey="leiteVidaApp.paciente.parentescoResponsavel">Parentesco</Translate>
+                Parentesco do Responsável
                 <span className="text-danger">*</span>
               </label>
               <ValidatedField
@@ -413,7 +412,7 @@ export const PacienteUpdate = () => {
           <Col md={6}>
             <div className="form-group">
               <label htmlFor="paciente-cpfResponsavel">
-                <Translate contentKey="leiteVidaApp.paciente.cpfResponsavel">CPF do Responsável</Translate>
+                CPF do Responsável
                 <span className="text-danger">*</span>
               </label>
               <ValidatedField
@@ -434,7 +433,7 @@ export const PacienteUpdate = () => {
           <Col md={6}>
             <div className="form-group">
               <label htmlFor="paciente-telefoneResponsavel">
-                <Translate contentKey="leiteVidaApp.paciente.telefoneResponsavel">Telefone do Responsável</Translate>
+                Telefone do Responsável
                 <span className="text-danger">*</span>
               </label>
               <ValidatedField
@@ -450,28 +449,6 @@ export const PacienteUpdate = () => {
                 value={formData.telefoneResponsavel}
               />
               {formErrors.telefoneResponsavel && <div className="invalid-feedback d-block">{formErrors.telefoneResponsavel}</div>}
-            </div>
-          </Col>
-        </Row>
-
-        <Row>
-          <Col md={12}>
-            <div className="form-group">
-              <div className="form-check">
-                <ValidatedField
-                  id="paciente-statusAtivo"
-                  name="statusAtivo"
-                  data-cy="statusAtivo"
-                  check
-                  type="checkbox"
-                  className="form-check-input"
-                  onChange={e => handleInputChange('statusAtivo', e.target.checked)}
-                  checked={formData.statusAtivo}
-                />
-                <label className="form-check-label" htmlFor="paciente-statusAtivo">
-                  <Translate contentKey="leiteVidaApp.paciente.statusAtivo">Status Ativo</Translate>
-                </label>
-              </div>
             </div>
           </Col>
         </Row>
