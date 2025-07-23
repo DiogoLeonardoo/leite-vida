@@ -7,6 +7,7 @@ import com.mycompany.myapp.service.DoadoraService;
 import com.mycompany.myapp.service.criteria.DoadoraCriteria;
 import com.mycompany.myapp.service.dto.DoadoraDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
@@ -228,5 +229,12 @@ public class DoadoraResource {
     @GetMapping("/buscar-doadoras")
     public Page<Doadora> buscarDoadoras(@RequestParam(required = false, defaultValue = "") String search, Pageable pageable) {
         return doadoraService.buscarDoadoras(search, pageable);
+    }
+
+    @GetMapping("/find-by-cpf/{cpf}")
+    public Doadora getByCpf(@PathVariable String cpf) {
+        return doadoraRepository
+            .findByCpf(cpf)
+            .orElseThrow(() -> new EntityNotFoundException("Doadora com CPF " + cpf + " não encontrada"));
     }
 }
