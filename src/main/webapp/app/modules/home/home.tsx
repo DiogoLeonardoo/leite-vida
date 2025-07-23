@@ -14,6 +14,13 @@ export const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Check if user needs to change password
+  useEffect(() => {
+    if (account?.mustChangePassword) {
+      navigate('/account/password-change');
+    }
+  }, [account, navigate]);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -65,12 +72,11 @@ export const Home = () => {
 
   const handleUsuarios = () => {
     // Implementar navegação para usuários
-    console.log('Usuários');
+    navigate('/admin/user-management');
   };
 
   const handleNovaDistribuicao = () => {
-    // Implementar navegação para nova distribuição
-    console.log('Nova Distribuição');
+    navigate('/paciente/new');
   };
 
   const handleRealizarAnalises = () => {
@@ -79,6 +85,7 @@ export const Home = () => {
   };
 
   const isLabUser = account?.authorities?.includes('ROLE_LAB');
+  const isAdmin = account?.authorities?.includes('ROLE_ADMIN');
 
   return (
     <div className="home-page">
@@ -231,13 +238,15 @@ export const Home = () => {
                   <div className="button-subtitle">Verificar o estoque de leite materno</div>
                 </Button>
               </Col>
-              <Col md={4} className="mb-3">
-                <Button color="light" block size="lg" className="action-button" onClick={handleUsuarios}>
-                  <i className="fas fa-users-cog me-2"></i>
-                  Usuários
-                  <div className="button-subtitle">Gerenciar usuários do sistema</div>
-                </Button>
-              </Col>
+              {isAdmin && (
+                <Col md={4} className="mb-3">
+                  <Button color="light" block size="lg" className="action-button" onClick={handleUsuarios}>
+                    <i className="fas fa-users-cog me-2"></i>
+                    Usuários
+                    <div className="button-subtitle">Gerenciar usuários do sistema</div>
+                  </Button>
+                </Col>
+              )}
               <Col md={4} className="mb-3">
                 <Button color="success" block size="lg" className="action-button" onClick={handleNovaDistribuicao}>
                   <i className="fas fa-share-alt me-2"></i>

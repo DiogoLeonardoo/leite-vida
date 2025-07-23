@@ -125,7 +125,6 @@ export const UserManagementSlice = createSlice({
         state.loading = false;
         state.updating = false;
         state.updateSuccess = false;
-        state.errorMessage = action.error.message;
       });
   },
 });

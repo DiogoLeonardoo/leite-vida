@@ -8,7 +8,9 @@ import LoadingBar from 'react-redux-loading-bar';
 import { useAppDispatch } from 'app/config/store';
 import { setLocale } from 'app/shared/reducers/locale';
 import { AccountMenu, AdminMenu, EntitiesMenu, LocaleMenu } from '../menus';
-import { Brand, Home } from './header-components';
+import { Brand, Coleta, Distribuicao, Doadora, Estoque, Pacientes, Processamentos, Users } from './header-components';
+import { hasAnyAuthority } from 'app/shared/auth/private-route';
+import { useAppSelector } from 'app/config/store';
 
 export interface IHeaderProps {
   isAuthenticated: boolean;
@@ -21,6 +23,9 @@ export interface IHeaderProps {
 
 const Header = (props: IHeaderProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const account = useAppSelector(state => state.authentication.account);
+  const isLab = hasAnyAuthority(account.authorities, ['ROLE_LAB']);
+  const isEnf = hasAnyAuthority(account.authorities, ['ROLE_LAB']);
 
   const dispatch = useAppDispatch();
 
@@ -30,37 +35,40 @@ const Header = (props: IHeaderProps) => {
     dispatch(setLocale(langKey));
   };
 
-  const renderDevRibbon = () =>
-    props.isInProduction === false ? (
-      <div className="ribbon dev">
-        <a href="">
-          <Translate contentKey={`global.ribbon.${props.ribbonEnv}`} />
-        </a>
-      </div>
-    ) : null;
-
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
   /* jhipster-needle-add-element-to-menu - JHipster will add new menu items here */
 
   return (
-    <div id="app-header">
-      {renderDevRibbon()}
-      <LoadingBar className="loading-bar" />
-      <Navbar data-cy="navbar" dark expand="md" fixed="top" className="jh-navbar">
-        <NavbarToggler aria-label="Menu" onClick={toggleMenu} />
-        <Brand />
-        <Collapse isOpen={menuOpen} navbar>
-          <Nav id="header-tabs" className="ms-auto" navbar>
-            <Home />
-            {props.isAuthenticated && <EntitiesMenu />}
-            {props.isAuthenticated && props.isAdmin && <AdminMenu showOpenAPI={props.isOpenAPIEnabled} />}
-            <LocaleMenu currentLocale={props.currentLocale} onClick={handleLocaleChange} />
-            <AccountMenu isAuthenticated={props.isAuthenticated} />
-          </Nav>
-        </Collapse>
-      </Navbar>
-    </div>
+    <>
+      {props.isAuthenticated && (
+        <div id="app-header">
+          <LoadingBar className="loading-bar" />
+          <Navbar data-cy="navbar" dark expand="md" fixed="top" className="jh-navbar">
+            <NavbarToggler aria-label="Menu" onClick={toggleMenu} />
+            <Brand />
+            <Collapse isOpen={menuOpen} navbar>
+              <Nav id="header-tabs" className="justify-content-center flex-grow-1" navbar>
+                <LocaleMenu currentLocale={props.currentLocale} onClick={handleLocaleChange} />
+                <>
+                  {!isLab && <Doadora />}
+                  {!isLab && <Pacientes />}
+                  {!isLab && <Coleta />}
+                  {!isLab && <Distribuicao />}
+                  {!isLab && <Estoque />}
+                  {isLab && <Processamentos />}
+                  {props.isAdmin && <Users />}
+                  {/* {props.isAdmin && <AdminMenu showOpenAPI={props.isOpenAPIEnabled} />} */}
+                </>
+              </Nav>
+              <Nav className="ms-auto" navbar>
+                <AccountMenu isAuthenticated={props.isAuthenticated} />
+              </Nav>
+            </Collapse>
+          </Navbar>
+        </div>
+      )}
+    </>
   );
 };
 
