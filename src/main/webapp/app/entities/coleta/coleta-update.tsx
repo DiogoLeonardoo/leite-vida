@@ -84,14 +84,11 @@ export const ColetaUpdate = () => {
         observacoes: coletaEntity.observacoes || '',
       });
 
-      // If doadora exists but CPF is null, fetch complete doadora data
       if (coletaEntity.doadora && coletaEntity.doadora.id) {
         if (coletaEntity.doadora.cpf) {
-          // CPF is already available
           setSelectedDoadora(coletaEntity.doadora);
           setCpfInput(maskCPF(coletaEntity.doadora.cpf));
         } else {
-          // Fetch complete doadora data
           fetchDoadoraById(coletaEntity.doadora.id);
         }
       }
@@ -100,7 +97,9 @@ export const ColetaUpdate = () => {
 
   const checkDoadoraTestResults = doadora => {
     const positiveTests = [];
+    const notInformedTests = [];
 
+    // Check for positive results
     if (doadora.resultadoVDRL === 'POSITIVO') {
       positiveTests.push('VDRL');
     }
@@ -114,9 +113,29 @@ export const ColetaUpdate = () => {
       positiveTests.push('HIV');
     }
 
-    if (positiveTests.length) {
+    // Check for not informed results
+    if (doadora.resultadoVDRL === 'NAO_INFORMADO') {
+      notInformedTests.push('VDRL');
+    }
+    if (doadora.resultadoHBsAg === 'NAO_INFORMADO') {
+      notInformedTests.push('HBsAg');
+    }
+    if (doadora.resultadoFTAabs === 'NAO_INFORMADO') {
+      notInformedTests.push('FTA-abs');
+    }
+    if (doadora.resultadoHIV === 'NAO_INFORMADO') {
+      notInformedTests.push('HIV');
+    }
+
+    if (positiveTests.length > 0) {
       const testsString = positiveTests.join(', ');
       setDoadoraTestError(`Doadora não pode fazer coleta. Resultado(s) positivo(s): ${testsString}`);
+      return false;
+    }
+
+    if (notInformedTests.length > 0) {
+      const testsString = notInformedTests.join(', ');
+      setDoadoraTestError(`Doadora não pode fazer coleta. Exame(s) não informado(s): ${testsString}`);
       return false;
     }
 
@@ -132,10 +151,6 @@ export const ColetaUpdate = () => {
         const isValidForColeta = checkDoadoraTestResults(response.data);
         setSelectedDoadora(response.data);
         setCpfError('');
-
-        if (!isValidForColeta) {
-          // Don't clear selectedDoadora so user can see the name, but prevent form submission
-        }
       } else {
         setCpfError('Doadora não encontrada');
         setSelectedDoadora(null);
