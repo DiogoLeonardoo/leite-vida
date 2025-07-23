@@ -24,6 +24,7 @@ export const UserManagementUpdate = () => {
     email: '',
     authorities: '',
   });
+  const [cpfValid, setCpfValid] = useState(false);
 
   useEffect(() => {
     if (isNew) {
@@ -42,6 +43,12 @@ export const UserManagementUpdate = () => {
   };
 
   const saveUser = async values => {
+    // Validate CPF before submission
+    if (!validateCPF(formData.login)) {
+      toast.error('CPF inválido. Verifique o número digitado.');
+      return;
+    }
+
     const finalValues = {
       id: formData.id || values.id,
       login: removeMask(formData.login || values.login),
@@ -76,6 +83,11 @@ export const UserManagementUpdate = () => {
       ...prev,
       [field]: value,
     }));
+
+    // Validate CPF when login field changes
+    if (field === 'login') {
+      setCpfValid(validateCPF(value));
+    }
   };
 
   const isInvalid = false;
@@ -86,14 +98,16 @@ export const UserManagementUpdate = () => {
 
   useEffect(() => {
     if (user) {
+      const maskedCPF = maskCPF(user.login || '');
       setFormData({
         id: user.id || '',
-        login: maskCPF(user.login || ''),
+        login: maskedCPF,
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         email: user.email || '',
         authorities: user.authorities && user.authorities.length > 0 ? user.authorities[0] : '',
       });
+      setCpfValid(validateCPF(maskedCPF));
     } else if (isNew) {
       setFormData({
         id: '',
@@ -103,8 +117,12 @@ export const UserManagementUpdate = () => {
         email: '',
         authorities: '',
       });
+      setCpfValid(false);
     }
   }, [user, isNew]);
+
+  // Check if form is valid for submission
+  const isFormValid = cpfValid && formData.firstName && formData.email && formData.authorities;
 
   return (
     <div className="user-management-update-page">
@@ -165,7 +183,12 @@ export const UserManagementUpdate = () => {
                             validate: v => validateCPF(v) || 'CPF inválido',
                           }}
                           placeholder="000.000.000-00"
+                          className={cpfValid ? 'is-valid' : formData.login ? 'is-invalid' : ''}
                         />
+                        {formData.login && !cpfValid && (
+                          <div className="invalid-feedback d-block">CPF inválido. Verifique o número digitado.</div>
+                        )}
+                        {cpfValid && <div className="valid-feedback d-block">CPF válido</div>}
                       </Col>
                     </Row>
 
@@ -275,7 +298,7 @@ export const UserManagementUpdate = () => {
                         <Translate contentKey="entity.action.back">Back</Translate>
                       </Button>
 
-                      <Button color="primary" type="submit" disabled={isInvalid || updating}>
+                      <Button color="primary" type="submit" disabled={!isFormValid || updating}>
                         {updating ? (
                           <>
                             <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
