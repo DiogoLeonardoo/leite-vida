@@ -246,4 +246,34 @@ public class ColetaResource {
         Page<Coleta> resultado = coletaService.buscarColetasFiltradas(status, id, pageable);
         return ResponseEntity.ok(resultado);
     }
+
+    /**
+     * {@code PATCH  /coletas/:id/cancelar} : Cancel a coleta by updating its status to CANCELADA.
+     *
+     * @param id the id of the coleta to cancel.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated coletaDTO, or with status {@code 404 (Not Found)} if the coleta is not found.
+     */
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<ColetaDTO> cancelarColeta(@PathVariable("id") Long id) {
+        LOG.debug("REST request to cancel Coleta : {}", id);
+
+        if (!coletaRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<ColetaDTO> coletaDTO = coletaService.findOne(id);
+        if (coletaDTO.isEmpty()) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        ColetaDTO coleta = coletaDTO.get();
+        coleta.setStatusColeta(StatusColeta.CANCELADA);
+
+        ColetaDTO result = coletaService.update(coleta);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
 }

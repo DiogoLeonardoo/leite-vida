@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table, Input, InputGroup, InputGroupText } from 'reactstrap';
+import { Button, Table, Input, InputGroup, InputGroupText, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
@@ -27,6 +27,8 @@ export const Coleta = () => {
   const [coletaList, setColetaList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalItems, setTotalItems] = useState(0);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedColetaId, setSelectedColetaId] = useState(null);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -127,6 +129,33 @@ export const Coleta = () => {
       ...prev,
       activePage: 1,
     }));
+  };
+
+  const handleCancelClick = coletaId => {
+    setSelectedColetaId(coletaId);
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      await axios.patch(`/api/coletas/${selectedColetaId}/cancelar`);
+
+      // Refresh the coleta list after successful cancellation
+      await fetchColetas();
+
+      console.log('Coleta cancelled successfully:', selectedColetaId);
+    } catch (error) {
+      console.error('Error cancelling coleta:', error);
+      // You could add a toast notification here for error handling
+    } finally {
+      setShowCancelModal(false);
+      setSelectedColetaId(null);
+    }
+  };
+
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
+    setSelectedColetaId(null);
   };
 
   const getSortIconByFieldName = (fieldName: string) => {
@@ -234,6 +263,39 @@ export const Coleta = () => {
                   </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
+                      {coleta.statusColeta !== 'CANCELADA' && (
+                        <Button
+                          size="sm"
+                          style={{
+                            backgroundColor: '#fff',
+                            borderColor: '#D27A7A',
+                            borderRadius: '6px',
+                            marginRight: '8px',
+                            color: '#D27A7A',
+                            fontWeight: '500',
+                            fontSize: '12px',
+                            padding: '6px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            transition: 'all 0.2s ease-in-out',
+                            border: '1px solid #D27A7A',
+                          }}
+                          data-cy="entityCancelButton"
+                          onClick={() => handleCancelClick(coleta.id)}
+                          onMouseEnter={e => {
+                            (e.target as HTMLButtonElement).style.backgroundColor = '#D27A7A';
+                            (e.target as HTMLButtonElement).style.color = '#fff';
+                          }}
+                          onMouseLeave={e => {
+                            (e.target as HTMLButtonElement).style.backgroundColor = '#fff';
+                            (e.target as HTMLButtonElement).style.color = '#D27A7A';
+                          }}
+                        >
+                          <FontAwesomeIcon icon="times" />
+                          Cancelar
+                        </Button>
+                      )}
                       <Button
                         tag={Link}
                         to={`/coleta/${coleta.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
@@ -271,6 +333,19 @@ export const Coleta = () => {
       ) : (
         ''
       )}
+
+      <Modal isOpen={showCancelModal} toggle={handleCloseCancelModal}>
+        <ModalHeader toggle={handleCloseCancelModal}>Confirmar Cancelamento</ModalHeader>
+        <ModalBody>Tem certeza que deseja cancelar a coleta de ID {selectedColetaId}?</ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={handleCloseCancelModal}>
+            Não
+          </Button>
+          <Button color="danger" onClick={handleConfirmCancel} style={{ backgroundColor: '#D27A7A', borderColor: '#D27A7A' }}>
+            Sim, Cancelar
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };
