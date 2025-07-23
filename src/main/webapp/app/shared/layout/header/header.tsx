@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Storage, Translate } from 'react-jhipster';
 import { Collapse, Nav, Navbar, NavbarToggler } from 'reactstrap';
 import LoadingBar from 'react-redux-loading-bar';
+import { useLocation } from 'react-router-dom';
 
 import { useAppDispatch } from 'app/config/store';
 import { setLocale } from 'app/shared/reducers/locale';
@@ -23,6 +24,7 @@ export interface IHeaderProps {
 
 const Header = (props: IHeaderProps) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
   const account = useAppSelector(state => state.authentication.account);
   const isLab = hasAnyAuthority(account.authorities, ['ROLE_LAB']);
   const isEnf = hasAnyAuthority(account.authorities, ['ROLE_LAB']);
@@ -37,7 +39,9 @@ const Header = (props: IHeaderProps) => {
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  /* jhipster-needle-add-element-to-menu - JHipster will add new menu items here */
+  if (location.pathname === '/account/password-change') {
+    return null;
+  }
 
   return (
     <>
