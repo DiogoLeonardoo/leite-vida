@@ -1,10 +1,13 @@
 package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Coleta;
+import com.mycompany.myapp.domain.Doadora;
 import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.repository.ColetaRepository;
+import com.mycompany.myapp.repository.DoadoraRepository;
 import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.service.mapper.ColetaMapper;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,11 +28,14 @@ public class ColetaService {
 
     private final ColetaRepository coletaRepository;
 
+    private final DoadoraRepository doadoraRepository;
+
     private final ColetaMapper coletaMapper;
 
-    public ColetaService(ColetaRepository coletaRepository, ColetaMapper coletaMapper) {
+    public ColetaService(ColetaRepository coletaRepository, ColetaMapper coletaMapper, DoadoraRepository doadoraRepository) {
         this.coletaRepository = coletaRepository;
         this.coletaMapper = coletaMapper;
+        this.doadoraRepository = doadoraRepository;
     }
 
     /**
@@ -41,6 +47,15 @@ public class ColetaService {
     public ColetaDTO save(ColetaDTO coletaDTO) {
         LOG.debug("Request to save Coleta : {}", coletaDTO);
         Coleta coleta = coletaMapper.toEntity(coletaDTO);
+
+        if (coletaDTO.getDoadora() != null && coletaDTO.getDoadora().getId() != null) {
+            Doadora doadora = doadoraRepository
+                .findById(coletaDTO.getDoadora().getId())
+                .orElseThrow(() -> new EntityNotFoundException("Doadora não encontrada"));
+
+            coleta.setDoadora(doadora);
+        }
+
         coleta = coletaRepository.save(coleta);
         return coletaMapper.toDto(coleta);
     }

@@ -5,6 +5,7 @@ import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.service.ColetaQueryService;
 import com.mycompany.myapp.service.ColetaService;
+import com.mycompany.myapp.service.ComprovanteService;
 import com.mycompany.myapp.service.criteria.ColetaCriteria;
 import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
@@ -21,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -48,10 +50,18 @@ public class ColetaResource {
 
     private final ColetaQueryService coletaQueryService;
 
-    public ColetaResource(ColetaService coletaService, ColetaRepository coletaRepository, ColetaQueryService coletaQueryService) {
+    private final ComprovanteService comprovanteService;
+
+    public ColetaResource(
+        ColetaService coletaService,
+        ColetaRepository coletaRepository,
+        ColetaQueryService coletaQueryService,
+        ComprovanteService comprovanteService
+    ) {
         this.coletaService = coletaService;
         this.coletaRepository = coletaRepository;
         this.coletaQueryService = coletaQueryService;
+        this.comprovanteService = comprovanteService;
     }
 
     /**
@@ -63,16 +73,25 @@ public class ColetaResource {
      *         the coleta has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PostMapping("")
-    public ResponseEntity<ColetaDTO> createColeta(@Valid @RequestBody ColetaDTO coletaDTO) throws URISyntaxException {
-        LOG.debug("REST request to save Coleta : {}", coletaDTO);
+
+    @PostMapping(value = "", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> createColetaComPdf(@Valid @RequestBody ColetaDTO coletaDTO) {
         if (coletaDTO.getId() != null) {
-            throw new BadRequestAlertException("A new coleta cannot already have an ID", ENTITY_NAME, "idexists");
+            throw new BadRequestAlertException("A nova coleta não pode já ter um ID", "coleta", "idexists");
         }
+
         coletaDTO = coletaService.save(coletaDTO);
-        return ResponseEntity.created(new URI("/api/coletas/" + coletaDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, coletaDTO.getId().toString()))
-            .body(coletaDTO);
+
+        try {
+            byte[] pdfBytes = comprovanteService.gerarPdfColeta(coletaDTO);
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=coleta_" + coletaDTO.getId() + ".pdf")
+                .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().header("X-error", "Erro ao gerar PDF: " + e.getMessage()).build();
+        }
     }
 
     /**
