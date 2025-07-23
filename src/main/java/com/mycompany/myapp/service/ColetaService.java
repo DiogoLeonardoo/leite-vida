@@ -1,17 +1,21 @@
 package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Coleta;
+import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.service.mapper.ColetaMapper;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service Implementation for managing {@link com.mycompany.myapp.domain.Coleta}.
+ * Service Implementation for managing
+ * {@link com.mycompany.myapp.domain.Coleta}.
  */
 @Service
 @Transactional
@@ -98,5 +102,9 @@ public class ColetaService {
 
     public Double getVolumeAguardandoProcessamento() {
         return coletaRepository.somarVolumeMlPorStatus();
+    }
+
+    public Page<Coleta> buscarColetasFiltradas(StatusColeta status, Long id, Pageable pageable) {
+        return coletaRepository.findByStatusAndIdOptional(status, id, pageable);
     }
 }
