@@ -14,6 +14,7 @@ import EntitiesRoutes from 'app/entities/routes';
 import PrivateRoute from 'app/shared/auth/private-route';
 import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
 import PageNotFound from 'app/shared/error/page-not-found';
+import Unauthorized from 'app/shared/error/unauthorized';
 import { AUTHORITIES } from 'app/config/constants';
 import PasswordChange from './modules/account/password-change/password-change';
 
@@ -33,8 +34,16 @@ const AppRoutes = () => {
     <div className="view-routes">
       <ErrorBoundaryRoutes>
         <Route index element={<Login />} />
-        <Route path="home" element={<Home />} />
+        <Route
+          path="home"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.ENF, AUTHORITIES.LAB]}>
+              <Home />
+            </PrivateRoute>
+          }
+        />
         <Route path="logout" element={<Logout />} />
+        <Route path="unauthorized" element={<Unauthorized />} />
         <Route path="account">
           <Route
             path="*"
@@ -59,14 +68,7 @@ const AppRoutes = () => {
             </PrivateRoute>
           }
         />
-        <Route
-          path="*"
-          element={
-            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.ENF, AUTHORITIES.LAB]}>
-              <EntitiesRoutes />
-            </PrivateRoute>
-          }
-        />
+        <Route path="*" element={<EntitiesRoutes />} />
 
         <Route
           path="account/password-change"
