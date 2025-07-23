@@ -36,15 +36,16 @@ export const getEntity = createAsyncThunk(
   { serializeError: serializeAxiosError },
 );
 
-export const createEntity = createAsyncThunk(
-  'coleta/create_entity',
-  async (entity: IColeta, thunkAPI) => {
-    const result = await axios.post<IColeta>(apiUrl, cleanEntity(entity));
-    thunkAPI.dispatch(getEntities({}));
-    return result;
-  },
-  { serializeError: serializeAxiosError },
-);
+export const createEntity = createAsyncThunk('coleta/create_entity', async (entity: IColeta, thunkAPI) => {
+  const response = await axios.post('/api/coletas', entity, {
+    responseType: 'blob',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/pdf',
+    },
+  });
+  return response;
+});
 
 export const updateEntity = createAsyncThunk(
   'coleta/update_entity',

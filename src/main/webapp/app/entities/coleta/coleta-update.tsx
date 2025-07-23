@@ -229,10 +229,9 @@ export const ColetaUpdate = () => {
     }
   };
 
-  const saveEntity = values => {
-    // Check if doadora has positive test results
+  const saveEntity = async values => {
     if (doadoraTestError) {
-      return; // Prevent form submission
+      return;
     }
 
     if (values.id !== undefined && typeof values.id !== 'number') {
@@ -258,10 +257,25 @@ export const ColetaUpdate = () => {
       doadora: selectedDoadora || doadoras.find(it => it.id.toString() === values.doadora?.toString()),
     };
 
-    if (isNew) {
-      dispatch(createEntity(entity));
-    } else {
-      dispatch(updateEntity(entity));
+    try {
+      let response;
+      if (isNew) {
+        response = await dispatch(createEntity(entity));
+      } else {
+        response = await dispatch(updateEntity(entity));
+      }
+
+      // response.payload é o axios response do passo 1
+      if (response && response.payload && response.payload.data) {
+        const blob = new Blob([response.payload.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+
+        // Opcional: libera o objeto URL após um tempo
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar a coleta:', error);
     }
   };
 
