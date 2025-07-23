@@ -13,8 +13,8 @@ import org.mapstruct.*;
  */
 @Mapper(componentModel = "spring")
 public interface ColetaMapper extends EntityMapper<ColetaDTO, Coleta> {
+    // Mapear tudo, inclusive doadora completa
     @Mapping(target = "processamento", source = "processamento", qualifiedByName = "processamentoId")
-    @Mapping(target = "doadora", source = "doadora", qualifiedByName = "doadoraId")
     ColetaDTO toDto(Coleta s);
 
     @Named("processamentoId")
@@ -22,6 +22,7 @@ public interface ColetaMapper extends EntityMapper<ColetaDTO, Coleta> {
     @Mapping(target = "id", source = "id")
     ProcessamentoDTO toDtoProcessamentoId(Processamento processamento);
 
+    // Se precisar do método parcial para doadora (apenas id), deixe ele aqui
     @Named("doadoraId")
     @BeanMapping(ignoreByDefault = true)
     @Mapping(target = "id", source = "id")

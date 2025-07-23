@@ -31,7 +31,7 @@ export const Home = () => (
 export const Doadora = () => (
   <NavItem>
     <NavLink tag={Link} to="/doadora" className="d-flex align-items-center">
-      <img src="content/images/pregnant.svg" style={{ width: '28px', marginRight: '10px' }} />
+      <img src="content/images/pregnant.svg" style={{ width: '28px', marginRight: '5px' }} />
       <span>Doadoras</span>
     </NavLink>
   </NavItem>
@@ -76,7 +76,7 @@ export const Estoque = () => (
 export const Users = () => (
   <NavItem>
     <NavLink tag={Link} to="/admin/user-management" className="d-flex align-items-center">
-      <img src="content/images/pessoas.svg" style={{ width: '25px', marginRight: '10px' }} />
+      <img src="content/images/pessoas.svg" style={{ width: '20px', marginRight: '10px' }} />
       <span>Usuários</span>
     </NavLink>
   </NavItem>

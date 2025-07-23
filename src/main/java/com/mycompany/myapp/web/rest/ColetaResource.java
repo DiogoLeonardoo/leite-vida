@@ -1,8 +1,11 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.Coleta;
+import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.service.ColetaQueryService;
 import com.mycompany.myapp.service.ColetaService;
+import com.mycompany.myapp.service.ComprovanteService;
 import com.mycompany.myapp.service.criteria.ColetaCriteria;
 import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
@@ -19,6 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -46,39 +50,61 @@ public class ColetaResource {
 
     private final ColetaQueryService coletaQueryService;
 
-    public ColetaResource(ColetaService coletaService, ColetaRepository coletaRepository, ColetaQueryService coletaQueryService) {
+    private final ComprovanteService comprovanteService;
+
+    public ColetaResource(
+        ColetaService coletaService,
+        ColetaRepository coletaRepository,
+        ColetaQueryService coletaQueryService,
+        ComprovanteService comprovanteService
+    ) {
         this.coletaService = coletaService;
         this.coletaRepository = coletaRepository;
         this.coletaQueryService = coletaQueryService;
+        this.comprovanteService = comprovanteService;
     }
 
     /**
      * {@code POST  /coletas} : Create a new coleta.
      *
      * @param coletaDTO the coletaDTO to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new coletaDTO, or with status {@code 400 (Bad Request)} if the coleta has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new coletaDTO, or with status {@code 400 (Bad Request)} if
+     *         the coleta has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
-    @PostMapping("")
-    public ResponseEntity<ColetaDTO> createColeta(@Valid @RequestBody ColetaDTO coletaDTO) throws URISyntaxException {
-        LOG.debug("REST request to save Coleta : {}", coletaDTO);
+
+    @PostMapping(value = "", produces = MediaType.APPLICATION_PDF_VALUE)
+    public ResponseEntity<byte[]> createColetaComPdf(@Valid @RequestBody ColetaDTO coletaDTO) {
         if (coletaDTO.getId() != null) {
-            throw new BadRequestAlertException("A new coleta cannot already have an ID", ENTITY_NAME, "idexists");
+            throw new BadRequestAlertException("A nova coleta não pode já ter um ID", "coleta", "idexists");
         }
+
         coletaDTO = coletaService.save(coletaDTO);
-        return ResponseEntity.created(new URI("/api/coletas/" + coletaDTO.getId()))
-            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, coletaDTO.getId().toString()))
-            .body(coletaDTO);
+
+        try {
+            byte[] pdfBytes = comprovanteService.gerarPdfColeta(coletaDTO);
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header("Content-Disposition", "attachment; filename=coleta_" + coletaDTO.getId() + ".pdf")
+                .body(pdfBytes);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().header("X-error", "Erro ao gerar PDF: " + e.getMessage()).build();
+        }
     }
 
     /**
      * {@code PUT  /coletas/:id} : Updates an existing coleta.
      *
-     * @param id the id of the coletaDTO to save.
+     * @param id        the id of the coletaDTO to save.
      * @param coletaDTO the coletaDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated coletaDTO,
-     * or with status {@code 400 (Bad Request)} if the coletaDTO is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the coletaDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated coletaDTO,
+     *         or with status {@code 400 (Bad Request)} if the coletaDTO is not
+     *         valid,
+     *         or with status {@code 500 (Internal Server Error)} if the coletaDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
@@ -105,14 +131,18 @@ public class ColetaResource {
     }
 
     /**
-     * {@code PATCH  /coletas/:id} : Partial updates given fields of an existing coleta, field will ignore if it is null
+     * {@code PATCH  /coletas/:id} : Partial updates given fields of an existing
+     * coleta, field will ignore if it is null
      *
-     * @param id the id of the coletaDTO to save.
+     * @param id        the id of the coletaDTO to save.
      * @param coletaDTO the coletaDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated coletaDTO,
-     * or with status {@code 400 (Bad Request)} if the coletaDTO is not valid,
-     * or with status {@code 404 (Not Found)} if the coletaDTO is not found,
-     * or with status {@code 500 (Internal Server Error)} if the coletaDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated coletaDTO,
+     *         or with status {@code 400 (Bad Request)} if the coletaDTO is not
+     *         valid,
+     *         or with status {@code 404 (Not Found)} if the coletaDTO is not found,
+     *         or with status {@code 500 (Internal Server Error)} if the coletaDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
@@ -145,7 +175,8 @@ public class ColetaResource {
      *
      * @param pageable the pagination information.
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of coletas in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of coletas in body.
      */
     @GetMapping("")
     public ResponseEntity<List<ColetaDTO>> getAllColetas(
@@ -163,7 +194,8 @@ public class ColetaResource {
      * {@code GET  /coletas/count} : count all the coletas.
      *
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count
+     *         in body.
      */
     @GetMapping("/count")
     public ResponseEntity<Long> countColetas(ColetaCriteria criteria) {
@@ -175,7 +207,8 @@ public class ColetaResource {
      * {@code GET  /coletas/:id} : get the "id" coleta.
      *
      * @param id the id of the coletaDTO to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the coletaDTO, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the coletaDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
     public ResponseEntity<ColetaDTO> getColeta(@PathVariable("id") Long id) {
@@ -202,5 +235,45 @@ public class ColetaResource {
     @GetMapping("/volume-aguardando-processamento")
     public Double getVolumeAguardandoProcessamento() {
         return coletaService.getVolumeAguardandoProcessamento();
+    }
+
+    @GetMapping("/buscar-coletas")
+    public ResponseEntity<Page<Coleta>> listarColetas(
+        @RequestParam(required = false) StatusColeta status,
+        @RequestParam(required = false) Long id,
+        Pageable pageable
+    ) {
+        Page<Coleta> resultado = coletaService.buscarColetasFiltradas(status, id, pageable);
+        return ResponseEntity.ok(resultado);
+    }
+
+    /**
+     * {@code PATCH  /coletas/:id/cancelar} : Cancel a coleta by updating its status to CANCELADA.
+     *
+     * @param id the id of the coleta to cancel.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated coletaDTO, or with status {@code 404 (Not Found)} if the coleta is not found.
+     */
+    @PatchMapping("/{id}/cancelar")
+    public ResponseEntity<ColetaDTO> cancelarColeta(@PathVariable("id") Long id) {
+        LOG.debug("REST request to cancel Coleta : {}", id);
+
+        if (!coletaRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<ColetaDTO> coletaDTO = coletaService.findOne(id);
+        if (coletaDTO.isEmpty()) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        ColetaDTO coleta = coletaDTO.get();
+        coleta.setStatusColeta(StatusColeta.CANCELADA);
+
+        ColetaDTO result = coletaService.update(coleta);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 }
