@@ -51,8 +51,7 @@ export const Home = () => {
   }, []);
 
   const handleNovaColeta = () => {
-    // Implementar navegação para nova coleta
-    console.log('Nova Coleta');
+    navigate('/coleta/new');
   };
 
   const handleNovaDoadora = () => {
