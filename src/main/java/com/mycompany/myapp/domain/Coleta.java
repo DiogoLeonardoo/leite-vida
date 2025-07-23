@@ -46,9 +46,9 @@ public class Coleta implements Serializable {
     @Column(name = "status_coleta", nullable = false)
     private StatusColeta statusColeta;
 
+    // ALTERAÇÃO: Removido @OneToOne e @JoinColumn, mantido apenas o mapeamento bidirecional
     @JsonIgnoreProperties(value = { "estoque", "coleta" }, allowSetters = true)
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(unique = true)
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "coleta")
     private Processamento processamento;
 
     @ManyToOne(optional = false)
@@ -153,6 +153,7 @@ public class Coleta implements Serializable {
         return this.processamento;
     }
 
+    // ALTERAÇÃO: Método setter simplificado (relacionamento gerenciado por Processamento)
     public void setProcessamento(Processamento processamento) {
         this.processamento = processamento;
     }
