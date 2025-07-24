@@ -35,7 +35,7 @@ const EntitiesRoutesWrapper = () => {
           (isAdmin || isEnfUser) ? <Doadora /> : <Navigate to="/unauthorized" replace />
         } />
         <Route path="paciente/*" element={isAdmin || isEnfUser ? <Paciente /> : <Navigate to="/unauthorized" replace />} />
-        <Route path="coleta/*" element={isAdmin || isEnfUser ? <Coleta /> : <Navigate to="/unauthorized" replace />} />
+        <Route path="coleta/*" element={isAdmin || isEnfUser || isLabUser ? <Coleta /> : <Navigate to="/unauthorized" replace />} />
         <Route path="processamento/*" element={isAdmin || isLabUser ? <Processamento /> : <Navigate to="/unauthorized" replace />} />
         <Route path="estoque/*" element={isAdmin || isEnfUser ? <Estoque /> : <Navigate to="/unauthorized" replace />} />
         <Route path="distribuicao/*" element={isAdmin || isEnfUser ? <Distribuicao /> : <Navigate to="/unauthorized" replace />} />
