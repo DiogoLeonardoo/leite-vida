@@ -7,7 +7,12 @@ import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons'
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
+import { useAppSelector } from 'app/config/store';
+import { hasAnyAuthority } from 'app/shared/auth/private-route';
+import { AUTHORITIES } from 'app/config/constants';
 import axios from 'axios';
+import FrascoLabModal from './frascolab-modal';
+import ProcessingModal from './processing-modal';
 import './coleta.scss';
 
 const ITEMS_PER_PAGE = 6;
@@ -15,6 +20,8 @@ const ITEMS_PER_PAGE = 6;
 export const Coleta = () => {
   const pageLocation = useLocation();
   const navigate = useNavigate();
+  const account = useAppSelector(state => state.authentication.account);
+  const isLab = hasAnyAuthority(account.authorities, [AUTHORITIES.LAB]);
 
   const [paginationState, setPaginationState] = useState(
     overridePaginationStateWithQueryParams(getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'), pageLocation.search),
@@ -29,6 +36,10 @@ export const Coleta = () => {
   const [totalItems, setTotalItems] = useState(0);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedColetaId, setSelectedColetaId] = useState(null);
+  const [showFrascoLabModal, setShowFrascoLabModal] = useState(false);
+  const [selectedFrascoLabId, setSelectedFrascoLabId] = useState(null);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [selectedProcessingId, setSelectedProcessingId] = useState(null);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -158,6 +169,48 @@ export const Coleta = () => {
     setSelectedColetaId(null);
   };
 
+  const handleFrascoLabClick = coletaId => {
+    setSelectedFrascoLabId(coletaId);
+    setShowFrascoLabModal(true);
+  };
+
+  const handleCloseFrascoLabModal = () => {
+    setShowFrascoLabModal(false);
+    setSelectedFrascoLabId(null);
+  };
+
+  const handleConfirmFrascoLab = coletaId => {
+    try {
+      setSelectedProcessingId(coletaId);
+      setShowProcessingModal(true);
+
+      console.log('Opening processing modal for coleta:', coletaId);
+    } catch (error) {
+      console.error('Error opening processing modal:', error);
+    }
+  };
+
+  const handleCloseProcessingModal = () => {
+    setShowProcessingModal(false);
+    setSelectedProcessingId(null);
+  };
+
+  const handleSaveProcessing = async (coletaId, processingData) => {
+    try {
+      // Add your API call here for saving processing data
+      console.log('Saving processing data for coleta:', coletaId, processingData);
+      // await axios.patch(`/api/coletas/${coletaId}/processar-laboratorio`, processingData);
+
+      // Refresh the coleta list after successful processing
+      await fetchColetas();
+
+      console.log('Processing data saved successfully:', coletaId);
+    } catch (error) {
+      console.error('Error saving processing data:', error);
+      // You could add a toast notification here for error handling
+    }
+  };
+
   const getSortIconByFieldName = (fieldName: string) => {
     const sortFieldName = paginationState.sort;
     const order = paginationState.order;
@@ -232,10 +285,12 @@ export const Coleta = () => {
             <option value="CANCELADA">Cancelada</option>
           </Input>
 
-          <Link to="/coleta/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
-            <FontAwesomeIcon icon="plus" />
-            &nbsp; Criar nova coleta
-          </Link>
+          {!isLab && (
+            <Link to="/coleta/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
+              <FontAwesomeIcon icon="plus" />
+              &nbsp; Criar nova coleta
+            </Link>
+          )}
         </div>
       </h2>
       <div className="table-responsive">
@@ -248,7 +303,8 @@ export const Coleta = () => {
                 <th>Volume (mL)</th>
                 <th>Local Coleta</th>
                 <th>Status Coleta</th>
-                <th />
+                {isLab && <th>Analisar</th>}
+                {!isLab && <th />}
               </tr>
             </thead>
             <tbody>
@@ -263,48 +319,66 @@ export const Coleta = () => {
                   </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      {coleta.statusColeta !== 'CANCELADA' && (
-                        <Button
-                          size="sm"
-                          style={{
-                            backgroundColor: '#fff',
-                            borderColor: '#D27A7A',
-                            borderRadius: '6px',
-                            marginRight: '8px',
-                            color: '#D27A7A',
-                            fontWeight: '500',
-                            fontSize: '12px',
-                            padding: '6px 12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            transition: 'all 0.2s ease-in-out',
-                            border: '1px solid #D27A7A',
-                          }}
-                          data-cy="entityCancelButton"
-                          onClick={() => handleCancelClick(coleta.id)}
-                          onMouseEnter={e => {
-                            (e.target as HTMLButtonElement).style.backgroundColor = '#D27A7A';
-                            (e.target as HTMLButtonElement).style.color = '#fff';
-                          }}
-                          onMouseLeave={e => {
-                            (e.target as HTMLButtonElement).style.backgroundColor = '#fff';
-                            (e.target as HTMLButtonElement).style.color = '#D27A7A';
-                          }}
-                        >
-                          <FontAwesomeIcon icon="times" />
-                          Cancelar
-                        </Button>
+                      {isLab ? (
+                        coleta.statusColeta === 'AGUARDANDO_PROCESSAMENTO' && (
+                          <Button
+                            size="sm"
+                            className="btn-frascolab"
+                            data-cy="entityFrascoLabButton"
+                            style={{ background: '#7AD27D' }}
+                            onClick={() => handleFrascoLabClick(coleta.id)}
+                          >
+                            <img src="content/images/frascolab.svg" alt="Frascolab" style={{ width: '16px', height: '16px' }} />
+                          </Button>
+                        )
+                      ) : (
+                        <>
+                          {coleta.statusColeta !== 'CANCELADA' && coleta.statusColeta !== 'PROCESSADA' && (
+                            <Button
+                              size="sm"
+                              style={{
+                                backgroundColor: '#fff',
+                                borderColor: '#D27A7A',
+                                borderRadius: '6px',
+                                marginRight: '8px',
+                                color: '#D27A7A',
+                                fontWeight: '500',
+                                fontSize: '12px',
+                                padding: '6px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'all 0.2s ease-in-out',
+                                border: '1px solid #D27A7A',
+                              }}
+                              data-cy="entityCancelButton"
+                              onClick={() => handleCancelClick(coleta.id)}
+                              onMouseEnter={e => {
+                                (e.target as HTMLButtonElement).style.backgroundColor = '#D27A7A';
+                                (e.target as HTMLButtonElement).style.color = '#fff';
+                              }}
+                              onMouseLeave={e => {
+                                (e.target as HTMLButtonElement).style.backgroundColor = '#fff';
+                                (e.target as HTMLButtonElement).style.color = '#D27A7A';
+                              }}
+                            >
+                              <FontAwesomeIcon icon="times" />
+                              Cancelar
+                            </Button>
+                          )}
+                          {coleta.statusColeta !== 'PROCESSADA' && coleta.statusColeta !== 'CANCELADA' && (
+                            <Button
+                              tag={Link}
+                              to={`/coleta/${coleta.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                              color="primary"
+                              size="sm"
+                              data-cy="entityEditButton"
+                            >
+                              <FontAwesomeIcon icon="pencil-alt" />{' '}
+                            </Button>
+                          )}
+                        </>
                       )}
-                      <Button
-                        tag={Link}
-                        to={`/coleta/${coleta.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
-                        color="primary"
-                        size="sm"
-                        data-cy="entityEditButton"
-                      >
-                        <FontAwesomeIcon icon="pencil-alt" />{' '}
-                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -333,6 +407,20 @@ export const Coleta = () => {
       ) : (
         ''
       )}
+
+      <ProcessingModal
+        isOpen={showProcessingModal}
+        toggle={handleCloseProcessingModal}
+        coletaId={selectedProcessingId}
+        onSave={handleSaveProcessing}
+      />
+
+      <FrascoLabModal
+        isOpen={showFrascoLabModal}
+        toggle={handleCloseFrascoLabModal}
+        coletaId={selectedFrascoLabId}
+        onConfirm={handleConfirmFrascoLab}
+      />
 
       <Modal isOpen={showCancelModal} toggle={handleCloseCancelModal}>
         <ModalHeader toggle={handleCloseCancelModal}>Confirmar Cancelamento</ModalHeader>

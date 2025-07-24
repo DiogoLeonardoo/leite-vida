@@ -1,9 +1,21 @@
 package com.mycompany.myapp.service;
 
+import com.mycompany.myapp.domain.Coleta;
+import com.mycompany.myapp.domain.Estoque;
 import com.mycompany.myapp.domain.Processamento;
+import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.ResultadoAnalise;
+import com.mycompany.myapp.domain.enumeration.StatusColeta;
+import com.mycompany.myapp.domain.enumeration.StatusLote;
+import com.mycompany.myapp.domain.enumeration.TipoLeite;
+import com.mycompany.myapp.repository.ColetaRepository;
+import com.mycompany.myapp.repository.EstoqueRepository;
 import com.mycompany.myapp.repository.ProcessamentoRepository;
 import com.mycompany.myapp.service.dto.ProcessamentoDTO;
 import com.mycompany.myapp.service.mapper.ProcessamentoMapper;
+import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +39,20 @@ public class ProcessamentoService {
 
     private final ProcessamentoMapper processamentoMapper;
 
-    public ProcessamentoService(ProcessamentoRepository processamentoRepository, ProcessamentoMapper processamentoMapper) {
+    private final ColetaRepository coletaRepository;
+
+    private final EstoqueRepository estoqueRepository;
+
+    public ProcessamentoService(
+        ProcessamentoRepository processamentoRepository,
+        ProcessamentoMapper processamentoMapper,
+        ColetaRepository coletaRepository,
+        EstoqueRepository estoqueRepository
+    ) {
         this.processamentoRepository = processamentoRepository;
         this.processamentoMapper = processamentoMapper;
+        this.coletaRepository = coletaRepository;
+        this.estoqueRepository = estoqueRepository;
     }
 
     /**
@@ -111,5 +134,56 @@ public class ProcessamentoService {
     public void delete(Long id) {
         LOG.debug("Request to delete Processamento : {}", id);
         processamentoRepository.deleteById(id);
+    }
+
+    public ProcessamentoDTO criarProcessamentoComEstoque(ProcessamentoDTO processamentoDTO) {
+        Coleta coleta = coletaRepository
+            .findById(processamentoDTO.getColetaId())
+            .orElseThrow(() -> new EntityNotFoundException("Coleta não encontrada"));
+
+        // Modificar o status da coleta para PROCESSADA
+        coleta.setStatusColeta(StatusColeta.PROCESSADA);
+        coletaRepository.save(coleta);
+
+        Processamento processamento = new Processamento();
+        processamento.setDataProcessamento(processamentoDTO.getDataProcessamento());
+        processamento.setTecnicoResponsavel(processamentoDTO.getTecnicoResponsavel());
+        processamento.setValorAcidezDornic(processamentoDTO.getValorAcidezDornic());
+        processamento.setValorCaloricoKcal(processamentoDTO.getValorCaloricoKcal());
+        processamento.setResultadoAnalise(processamentoDTO.getResultadoAnalise());
+        processamento.setStatusProcessamento(processamentoDTO.getStatusProcessamento());
+        processamento.setColeta(coleta);
+
+        Estoque estoque = null;
+        if (ResultadoAnalise.APROVADO.equals(processamentoDTO.getResultadoAnalise())) {
+            estoque = criarEstoqueFromProcessamento(processamento, coleta, processamentoDTO);
+            estoque = estoqueRepository.save(estoque);
+
+            processamento.setEstoque(estoque);
+        }
+
+        processamento = processamentoRepository.save(processamento);
+
+        return processamentoMapper.toDto(processamento);
+    }
+
+    private Estoque criarEstoqueFromProcessamento(Processamento processamento, Coleta coleta, ProcessamentoDTO processamentoDTO) {
+        Estoque estoque = new Estoque();
+
+        estoque.setDataProducao(processamento.getDataProcessamento());
+        estoque.setDataValidade(calcularDataValidade(processamento.getDataProcessamento()));
+        estoque.setTipoLeite(processamentoDTO.getTipoLeite());
+        estoque.setClassificacao(processamentoDTO.getClassificacaoLeite());
+        estoque.setVolumeTotalMl(coleta.getVolumeMl());
+        estoque.setVolumeDisponivelMl(coleta.getVolumeMl());
+        estoque.setLocalArmazenamento(processamentoDTO.getLocalArmazenamento());
+        estoque.setTemperaturaArmazenamento(processamentoDTO.getTemperaturaArmazenamento());
+        estoque.setStatusLote(StatusLote.DISPONIVEL);
+
+        return estoque;
+    }
+
+    private LocalDate calcularDataValidade(LocalDate dataProducao) {
+        return dataProducao.plusMonths(6);
     }
 }

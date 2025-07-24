@@ -203,4 +203,24 @@ public class ProcessamentoResource {
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
     }
+
+    /**
+     * {@code POST  /processamentos/com-estoque} : Create a new processamento with estoque.
+     *
+     * @param processamentoDTO the processamentoDTO to create.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new processamentoDTO.
+     * @throws URISyntaxException if the Location URI syntax is incorrect.
+     */
+    @PostMapping("/com-estoque")
+    public ResponseEntity<ProcessamentoDTO> createProcessamentoComEstoque(@Valid @RequestBody ProcessamentoDTO processamentoDTO)
+        throws URISyntaxException {
+        LOG.debug("REST request to save Processamento with Estoque : {}", processamentoDTO);
+        if (processamentoDTO.getId() != null) {
+            throw new BadRequestAlertException("A new processamento cannot already have an ID", ENTITY_NAME, "idexists");
+        }
+        processamentoDTO = processamentoService.criarProcessamentoComEstoque(processamentoDTO);
+        return ResponseEntity.created(new URI("/api/processamentos/" + processamentoDTO.getId()))
+            .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, processamentoDTO.getId().toString()))
+            .body(processamentoDTO);
+    }
 }

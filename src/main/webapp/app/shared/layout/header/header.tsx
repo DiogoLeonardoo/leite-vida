@@ -57,7 +57,7 @@ const Header = (props: IHeaderProps) => {
                 <>
                   {!isLab && <Doadora />}
                   {!isLab && <Pacientes />}
-                  {!isLab && <Coleta />}
+                  {props.isAuthenticated && <Coleta />}
                   {!isLab && <Distribuicao />}
                   {!isLab && <Estoque />}
                   {isLab && <Processamentos />}
