@@ -1,7 +1,9 @@
 package com.mycompany.myapp.service.dto;
 
+import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
 import com.mycompany.myapp.domain.enumeration.ResultadoAnalise;
 import com.mycompany.myapp.domain.enumeration.StatusProcessamento;
+import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import jakarta.validation.constraints.*;
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -32,6 +34,24 @@ public class ProcessamentoDTO implements Serializable {
     private StatusProcessamento statusProcessamento;
 
     private EstoqueDTO estoque;
+
+    private Long coletaId;
+
+    private TipoLeite tipoLeite;
+
+    private ClassificacaoLeite classificacaoLeite;
+
+    private String localArmazenamento;
+
+    private Double temperaturaArmazenamento;
+
+    public Long getColetaId() {
+        return coletaId;
+    }
+
+    public void setColetaId(Long coletaId) {
+        this.coletaId = coletaId;
+    }
 
     public Long getId() {
         return id;
@@ -97,6 +117,38 @@ public class ProcessamentoDTO implements Serializable {
         this.estoque = estoque;
     }
 
+    public TipoLeite getTipoLeite() {
+        return tipoLeite;
+    }
+
+    public void setTipoLeite(TipoLeite tipoLeite) {
+        this.tipoLeite = tipoLeite;
+    }
+
+    public ClassificacaoLeite getClassificacaoLeite() {
+        return classificacaoLeite;
+    }
+
+    public void setClassificacaoLeite(ClassificacaoLeite classificacaoLeite) {
+        this.classificacaoLeite = classificacaoLeite;
+    }
+
+    public String getLocalArmazenamento() {
+        return localArmazenamento;
+    }
+
+    public void setLocalArmazenamento(String localArmazenamento) {
+        this.localArmazenamento = localArmazenamento;
+    }
+
+    public Double getTemperaturaArmazenamento() {
+        return temperaturaArmazenamento;
+    }
+
+    public void setTemperaturaArmazenamento(Double temperaturaArmazenamento) {
+        this.temperaturaArmazenamento = temperaturaArmazenamento;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -130,6 +182,10 @@ public class ProcessamentoDTO implements Serializable {
             ", resultadoAnalise='" + getResultadoAnalise() + "'" +
             ", statusProcessamento='" + getStatusProcessamento() + "'" +
             ", estoque=" + getEstoque() +
+            ", tipoLeite=" + getTipoLeite() +
+            ", classificacaoLeite=" + getClassificacaoLeite() +
+            ", localArmazenamento='" + getLocalArmazenamento() + "'" +
+            ", temperaturaArmazenamento=" + getTemperaturaArmazenamento() +
             "}";
     }
 }
