@@ -119,6 +119,39 @@
         box-shadow: 0 4px 8px rgba(122, 210, 125, 0.3);
       }
     }
+
+    .btn-frascolab {
+      background-color: #fff5e1;
+      border-color: #7ad27d;
+      color: #2c5530;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      border: 1px solid #7ad27d;
+
+      &:hover,
+      &:focus {
+        background-color: #7ad27d;
+        border-color: #5fb85f;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(122, 210, 125, 0.4);
+      }
+
+      img {
+        filter: brightness(0) saturate(100%) invert(25%) sepia(15%) saturate(1849%) hue-rotate(69deg) brightness(93%) contrast(92%);
+        transition: filter 0.3s ease;
+      }
+
+      &:hover img,
+      &:focus img {
+        filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(7500%) hue-rotate(165deg) brightness(100%) contrast(100%);
+      }
+    }
   }
 
   .table-responsive {
