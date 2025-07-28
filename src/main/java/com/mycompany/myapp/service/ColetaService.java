@@ -6,11 +6,16 @@ import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.repository.DoadoraRepository;
 import com.mycompany.myapp.service.dto.ColetaDTO;
+import com.mycompany.myapp.service.dto.ColetaDoadoraDTO;
+import com.mycompany.myapp.service.dto.ColetaDoadoraProjection;
 import com.mycompany.myapp.service.mapper.ColetaMapper;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -121,5 +126,11 @@ public class ColetaService {
 
     public Page<Coleta> buscarColetasFiltradas(StatusColeta status, Long id, Pageable pageable) {
         return coletaRepository.findByStatusAndIdOptional(status, id, pageable);
+    }
+
+    public ColetaDoadoraProjection buscarDadosPorId(Long coletaId) {
+        return coletaRepository
+            .buscarPorId(coletaId)
+            .orElseThrow(() -> new EntityNotFoundException("Coleta não encontrada com id: " + coletaId));
     }
 }

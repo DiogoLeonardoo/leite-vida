@@ -1,10 +1,14 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.Estoque;
+import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.EstoqueRepository;
 import com.mycompany.myapp.service.EstoqueQueryService;
 import com.mycompany.myapp.service.EstoqueService;
 import com.mycompany.myapp.service.criteria.EstoqueCriteria;
 import com.mycompany.myapp.service.dto.EstoqueDTO;
+import com.mycompany.myapp.service.dto.EstoqueDoadoraDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -15,9 +19,11 @@ import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -215,5 +221,26 @@ public class EstoqueResource {
     @GetMapping("/soma-volume")
     public Long getSomaVolumeDisponivel() {
         return estoqueService.somarVolumeDisponivelMl();
+    }
+
+    @GetMapping("/buscar-estoques")
+    public ResponseEntity<Page<Estoque>> listarEstoques(
+        @RequestParam(required = false) TipoLeite tipoLeite,
+        @RequestParam(required = false) ClassificacaoLeite classificacao,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<Estoque> estoques = estoqueService.buscarTodos(tipoLeite, classificacao, pageable);
+        return ResponseEntity.ok(estoques);
+    }
+
+    @GetMapping("/estoque-doadora/{estoqueId}")
+    public ResponseEntity<EstoqueDoadoraDTO> getEstoqueDoadora(@PathVariable Long estoqueId) {
+        EstoqueDoadoraDTO dto = estoqueService.buscarDetalhesEstoque(estoqueId);
+
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(dto);
     }
 }
