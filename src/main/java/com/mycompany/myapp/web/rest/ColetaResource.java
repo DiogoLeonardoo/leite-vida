@@ -8,6 +8,8 @@ import com.mycompany.myapp.service.ColetaService;
 import com.mycompany.myapp.service.ComprovanteService;
 import com.mycompany.myapp.service.criteria.ColetaCriteria;
 import com.mycompany.myapp.service.dto.ColetaDTO;
+import com.mycompany.myapp.service.dto.ColetaDoadoraDTO;
+import com.mycompany.myapp.service.dto.ColetaDoadoraProjection;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -248,11 +250,13 @@ public class ColetaResource {
     }
 
     /**
-     * {@code PATCH  /coletas/:id/cancelar} : Cancel a coleta by updating its status to CANCELADA.
+     * {@code PATCH  /coletas/:id/cancelar} : Cancel a coleta by updating its status
+     * to CANCELADA.
      *
      * @param id the id of the coleta to cancel.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
-     *         the updated coletaDTO, or with status {@code 404 (Not Found)} if the coleta is not found.
+     *         the updated coletaDTO, or with status {@code 404 (Not Found)} if the
+     *         coleta is not found.
      */
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<ColetaDTO> cancelarColeta(@PathVariable("id") Long id) {
@@ -275,5 +279,14 @@ public class ColetaResource {
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
+    }
+
+    @GetMapping("/coleta-doadora/{coletaId}")
+    public ResponseEntity<ColetaDoadoraProjection> getColetaPorId(@PathVariable Long coletaId) {
+        ColetaDoadoraProjection dto = coletaService.buscarDadosPorId(coletaId);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(dto);
     }
 }

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Table, Input, InputGroup, InputGroupText, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortDown, faSortUp, faEye } from '@fortawesome/free-solid-svg-icons';
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
@@ -40,6 +40,9 @@ export const Coleta = () => {
   const [selectedFrascoLabId, setSelectedFrascoLabId] = useState(null);
   const [showProcessingModal, setShowProcessingModal] = useState(false);
   const [selectedProcessingId, setSelectedProcessingId] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedColetaDetails, setSelectedColetaDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -197,18 +200,34 @@ export const Coleta = () => {
 
   const handleSaveProcessing = async (coletaId, processingData) => {
     try {
-      // Add your API call here for saving processing data
       console.log('Saving processing data for coleta:', coletaId, processingData);
-      // await axios.patch(`/api/coletas/${coletaId}/processar-laboratorio`, processingData);
 
-      // Refresh the coleta list after successful processing
       await fetchColetas();
 
       console.log('Processing data saved successfully:', coletaId);
     } catch (error) {
       console.error('Error saving processing data:', error);
-      // You could add a toast notification here for error handling
     }
+  };
+
+  const handleDetailsClick = async coletaId => {
+    setShowDetailsModal(true);
+    setDetailsLoading(true);
+
+    try {
+      const response = await axios.get(`/api/coletas/coleta-doadora/${coletaId}`);
+      setSelectedColetaDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching coleta details:', error);
+      setSelectedColetaDetails(null);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedColetaDetails(null);
   };
 
   const getSortIconByFieldName = (fieldName: string) => {
@@ -303,8 +322,7 @@ export const Coleta = () => {
                 <th>Volume (mL)</th>
                 <th>Local Coleta</th>
                 <th>Status Coleta</th>
-                {isLab && <th>Analisar</th>}
-                {!isLab && <th />}
+                <th>Detalhes</th>
               </tr>
             </thead>
             <tbody>
@@ -316,6 +334,16 @@ export const Coleta = () => {
                   <td>{coleta.localColeta}</td>
                   <td>
                     <StatusBadge status={coleta.statusColeta} />
+                  </td>
+                  <td>
+                    <Button
+                      style={{ background: '#7ad27d', border: 'none' }}
+                      size="sm"
+                      onClick={() => handleDetailsClick(coleta.id)}
+                      title="Visualizar detalhes"
+                    >
+                      <FontAwesomeIcon icon={faEye} />
+                    </Button>
                   </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
@@ -431,6 +459,66 @@ export const Coleta = () => {
           </Button>
           <Button color="danger" onClick={handleConfirmCancel} style={{ backgroundColor: '#D27A7A', borderColor: '#D27A7A' }}>
             Sim, Cancelar
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={showDetailsModal} toggle={handleCloseDetailsModal} size="lg">
+        <ModalHeader toggle={handleCloseDetailsModal}>Detalhes da Coleta {selectedColetaDetails?.coletaId}</ModalHeader>
+        <ModalBody>
+          {detailsLoading ? (
+            <div className="d-flex justify-content-center">
+              <div className="spinner-border" role="status">
+                <span className="sr-only">Carregando detalhes...</span>
+              </div>
+            </div>
+          ) : selectedColetaDetails ? (
+            <div>
+              <div className="row">
+                <div className="col-md-6">
+                  <h5>Informações da Coleta</h5>
+                  <p>
+                    <strong>ID:</strong> {selectedColetaDetails.coletaId}
+                  </p>
+                  <p>
+                    <strong>Data da Coleta:</strong>{' '}
+                    {selectedColetaDetails.dataColeta ? (
+                      <TextFormat type="date" value={selectedColetaDetails.dataColeta} format={APP_LOCAL_DATE_FORMAT} />
+                    ) : (
+                      'N/A'
+                    )}
+                  </p>
+                  <p>
+                    <strong>Volume (mL):</strong> {selectedColetaDetails.volumeMl}
+                  </p>
+                  <p>
+                    <strong>Local da Coleta:</strong> {selectedColetaDetails.localColeta}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> <Translate contentKey={`leiteVidaApp.StatusColeta.${selectedColetaDetails.statusColeta}`} />
+                  </p>
+                </div>
+                <div className="col-md-6">
+                  <h5>Informações da Doadora</h5>
+                  <p>
+                    <strong>Nome:</strong> {selectedColetaDetails.nomeDoadora}
+                  </p>
+                  <p>
+                    <strong>CPF:</strong> {selectedColetaDetails.cpfDoadora}
+                  </p>
+                  <p>
+                    <strong>Telefone:</strong> {selectedColetaDetails.telefoneDoadora}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="alert alert-warning">Não foi possível carregar os detalhes da coleta.</div>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={handleCloseDetailsModal}>
+            Fechar
           </Button>
         </ModalFooter>
       </Modal>

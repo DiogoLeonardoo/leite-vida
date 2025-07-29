@@ -97,10 +97,8 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({ isOpen, toggle
 
       toast.success('Processamento criado com sucesso!');
 
-      // Call the onSave callback with the response data
       onSave(coletaId, formData);
 
-      // Close modal (this will trigger the useEffect to clear the form)
       toggle();
     } catch (error) {
       console.error('Erro ao criar processamento:', error);
@@ -111,12 +109,10 @@ export const ProcessingModal: React.FC<ProcessingModalProps> = ({ isOpen, toggle
   };
 
   const handleCancel = () => {
-    // Just close the modal, useEffect will handle clearing the form
     toggle();
   };
 
   const handleToggle = () => {
-    // Custom toggle handler to ensure form is cleared when modal closes
     toggle();
   };
 
