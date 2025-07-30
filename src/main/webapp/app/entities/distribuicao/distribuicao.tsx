@@ -10,6 +10,7 @@ import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-u
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 
 import { getEntities } from './distribuicao.reducer';
+import './distribuicao.scss';
 
 export const Distribuicao = () => {
   const dispatch = useAppDispatch();
@@ -90,15 +91,21 @@ export const Distribuicao = () => {
   };
 
   return (
-    <div>
-      <h2 id="distribuicao-heading" data-cy="DistribuicaoHeading">
+    <div className="estoque-list-page">
+      <h2 id="distribuicao-heading" className="estoque-list-title" data-cy="DistribuicaoHeading">
         <Translate contentKey="leiteVidaApp.distribuicao.home.title">Distribuicaos</Translate>
-        <div className="d-flex justify-content-end">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
+        <div className="d-flex">
+          <Button className="me-2 btn-info" color="info" onClick={handleSyncList} disabled={loading} style={{ height: '48px' }}>
             <FontAwesomeIcon icon="sync" spin={loading} />{' '}
             <Translate contentKey="leiteVidaApp.distribuicao.home.refreshListLabel">Refresh List</Translate>
           </Button>
-          <Link to="/distribuicao/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
+          <Link
+            to="/distribuicao/new"
+            className="btn btn-primary jh-create-entity"
+            id="jh-create-entity"
+            data-cy="entityCreateButton"
+            style={{ height: '48px' }}
+          >
             <FontAwesomeIcon icon="plus" />
             &nbsp;
             <Translate contentKey="leiteVidaApp.distribuicao.home.createLabel">Create new Distribuicao</Translate>
@@ -166,7 +173,14 @@ export const Distribuicao = () => {
                   </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`/distribuicao/${distribuicao.id}`} color="info" size="sm" data-cy="entityDetailsButton">
+                      <Button
+                        tag={Link}
+                        to={`/distribuicao/${distribuicao.id}`}
+                        color="info"
+                        size="sm"
+                        data-cy="entityDetailsButton"
+                        className="btn-info"
+                      >
                         <FontAwesomeIcon icon="eye" />{' '}
                         <span className="d-none d-md-inline">
                           <Translate contentKey="entity.action.view">View</Translate>
@@ -178,6 +192,7 @@ export const Distribuicao = () => {
                         color="primary"
                         size="sm"
                         data-cy="entityEditButton"
+                        className="btn-primary"
                       >
                         <FontAwesomeIcon icon="pencil-alt" />{' '}
                         <span className="d-none d-md-inline">
@@ -191,6 +206,7 @@ export const Distribuicao = () => {
                         color="danger"
                         size="sm"
                         data-cy="entityDeleteButton"
+                        className="btn-danger"
                       >
                         <FontAwesomeIcon icon="trash" />{' '}
                         <span className="d-none d-md-inline">
