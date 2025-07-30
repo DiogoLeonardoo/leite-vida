@@ -4,9 +4,11 @@ import { Button, Table, Input, Modal, ModalHeader, ModalBody, ModalFooter } from
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSort, faSortDown, faSortUp, faEye } from '@fortawesome/free-solid-svg-icons';
-import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
+import { APP_LOCAL_DATE_FORMAT, AUTHORITIES } from 'app/config/constants';
 import { ASC, DESC, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
+import { useAppSelector } from 'app/config/store';
+import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import axios from 'axios';
 import './estoque.scss';
 
@@ -15,6 +17,8 @@ const ITEMS_PER_PAGE = 20;
 export const Estoque = () => {
   const pageLocation = useLocation();
   const navigate = useNavigate();
+  const account = useAppSelector(state => state.authentication.account);
+  const isEnf = hasAnyAuthority(account.authorities, [AUTHORITIES.ENF]);
 
   const [paginationState, setPaginationState] = useState(
     overridePaginationStateWithQueryParams(getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'), pageLocation.search),
@@ -52,22 +56,16 @@ export const Estoque = () => {
 
       const responseData = response.data;
 
-      // Handle different response structures
       let estoques = [];
       let totalCount = 0;
 
       if (Array.isArray(responseData)) {
-        // If response is directly an array
         estoques = responseData;
         totalCount = responseData.length;
       } else if (responseData && typeof responseData === 'object') {
-        // If response is paginated object
         estoques = responseData.content || responseData.data || [];
         totalCount = responseData.totalElements || responseData.total || parseInt(response.headers['x-total-count'], 10) || estoques.length;
       }
-
-      console.log('Processed estoques:', estoques);
-      console.log('Total count:', totalCount);
 
       setEstoqueList(estoques);
       setTotalItems(isNaN(totalCount) ? 0 : totalCount);
@@ -153,11 +151,42 @@ export const Estoque = () => {
       const response = await axios.get(`/api/estoques/estoque-doadora/${estoque.id}`);
       setEstoqueDetalhes(response.data);
     } catch (error) {
-      console.error('Error fetching estoque details:', error);
       setEstoqueDetalhes(null);
     } finally {
       setModalLoading(false);
     }
+  };
+
+  const handleReservar = async estoqueId => {
+    try {
+      await axios.patch(`/api/estoques/${estoqueId}/reservar`);
+
+      await fetchEstoques();
+    } catch (error) {}
+  };
+
+  const handleLiberar = async estoqueId => {
+    try {
+      await axios.patch(`/api/estoques/${estoqueId}/liberar`);
+
+      await fetchEstoques();
+    } catch (error) {}
+  };
+
+  const getStatusStyle = status => {
+    if (status === 'DISPONIVEL') {
+      return { background: '#618a33ff', color: '#fff', borderRadius: '2px', padding: '4px 12px', fontWeight: 500 };
+    }
+    if (status === 'RESERVADO') {
+      return { background: '#ffe066', color: '#333', borderRadius: '2px', padding: '4px 12px', fontWeight: 500 };
+    }
+    if (status === 'DISTRIBUIDO') {
+      return { background: '#D94F4F', color: '#333', borderRadius: '2px', padding: '4px 12px', fontWeight: 500 };
+    }
+    if (status === 'EXPIRADO') {
+      return { background: '#F4F4F4', color: '#333', borderRadius: '2px', padding: '4px 12px', fontWeight: 500 };
+    }
+    return { background: '#ccc', color: '#333', borderRadius: '2px', padding: '4px 12px', fontWeight: 500 };
   };
 
   return (
@@ -227,24 +256,16 @@ export const Estoque = () => {
             <tbody>
               {estoqueList.map((estoque, i) => (
                 <tr key={`entity-${i}`} data-cy="entityTable">
-                  <td>
-                    <Button tag={Link} to={`/estoque/${estoque.id}`} color="link" size="sm">
-                      {estoque.id}
-                    </Button>
-                  </td>
+                  <td>{estoque.id}</td>
                   <td>
                     {estoque.dataValidade ? <TextFormat type="date" value={estoque.dataValidade} format={APP_LOCAL_DATE_FORMAT} /> : null}
                   </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.TipoLeite.${estoque.tipoLeite}`} />
-                  </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.ClassificacaoLeite.${estoque.classificacao}`} />
-                  </td>
+                  <td>{estoque.tipoLeite}</td>
+                  <td>{estoque.classificacao}</td>
                   <td>{estoque.volumeTotalMl}</td>
                   <td>{estoque.volumeDisponivelMl}</td>
                   <td>
-                    <Translate contentKey={`leiteVidaApp.StatusLote.${estoque.statusLote}`} />
+                    <span style={getStatusStyle(estoque.statusLote)}>{estoque.statusLote}</span>
                   </td>
                   <td>
                     <Button
@@ -256,6 +277,28 @@ export const Estoque = () => {
                     >
                       <FontAwesomeIcon icon={faEye} />
                     </Button>
+                    {isEnf && estoque.statusLote === 'DISPONIVEL' && (
+                      <Button
+                        color="primary"
+                        size="sm"
+                        style={{ background: '#FFE066', border: 'none', color: '#000' }}
+                        onClick={() => handleReservar(estoque.id)}
+                        title="Reservar lote"
+                      >
+                        Reservar
+                      </Button>
+                    )}
+                    {isEnf && estoque.statusLote === 'RESERVADO' && (
+                      <Button
+                        color="warning"
+                        size="sm"
+                        style={{ background: '#618a33ff', border: 'none', color: '#fff' }}
+                        onClick={() => handleLiberar(estoque.id)}
+                        title="Liberar lote"
+                      >
+                        Liberar
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}

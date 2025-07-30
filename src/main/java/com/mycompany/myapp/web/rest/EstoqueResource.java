@@ -2,11 +2,14 @@ package com.mycompany.myapp.web.rest;
 
 import com.mycompany.myapp.domain.Estoque;
 import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.StatusColeta;
+import com.mycompany.myapp.domain.enumeration.StatusLote;
 import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.EstoqueRepository;
 import com.mycompany.myapp.service.EstoqueQueryService;
 import com.mycompany.myapp.service.EstoqueService;
 import com.mycompany.myapp.service.criteria.EstoqueCriteria;
+import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.service.dto.EstoqueDTO;
 import com.mycompany.myapp.service.dto.EstoqueDoadoraDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
@@ -242,5 +245,51 @@ public class EstoqueResource {
         }
 
         return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/{id}/reservar")
+    public ResponseEntity<EstoqueDTO> reservarEstoque(@PathVariable("id") Long id) {
+        LOG.debug("REST request to reserve Estoque : {}", id);
+
+        if (!estoqueRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<EstoqueDTO> estoqueDTO = estoqueService.findOne(id);
+        if (estoqueDTO.isEmpty()) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        EstoqueDTO estoque = estoqueDTO.get();
+        estoque.setStatusLote(StatusLote.RESERVADO);
+
+        EstoqueDTO result = estoqueService.update(estoque);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
+
+    @PatchMapping("/{id}/liberar")
+    public ResponseEntity<EstoqueDTO> liberarEstoque(@PathVariable("id") Long id) {
+        LOG.debug("REST request to liberate Estoque : {}", id);
+
+        if (!estoqueRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<EstoqueDTO> estoqueDTO = estoqueService.findOne(id);
+        if (estoqueDTO.isEmpty()) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        EstoqueDTO estoque = estoqueDTO.get();
+        estoque.setStatusLote(StatusLote.DISPONIVEL);
+
+        EstoqueDTO result = estoqueService.update(estoque);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
     }
 }
