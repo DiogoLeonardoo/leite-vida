@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Button, Col, FormText, Row } from 'reactstrap';
+import { Button, Col, FormText, Row, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import { Translate, ValidatedField, ValidatedForm, isNumber, translate } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
@@ -51,6 +51,9 @@ export const DistribuicaoUpdate = () => {
     tipoLeite: '',
     classificacaoLeite: '',
   });
+
+  // Add state for confirmation modal
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
 
   const handleClose = () => {
     navigate(`/distribuicao${location.search}`);
@@ -155,7 +158,12 @@ export const DistribuicaoUpdate = () => {
     }
   }, [distribuicaoEntity, isNew, estoques]);
 
-  const saveEntity = async values => {
+  const toggleConfirmModal = () => {
+    setConfirmModalOpen(!confirmModalOpen);
+  };
+
+  // Fix the async function by removing the async keyword since it doesn't use await
+  const saveEntity = values => {
     // Validação antes de enviar
     if (!formData.estoqueId || !formData.pacienteId) {
       alert('Por favor, selecione um estoque e um paciente.');
@@ -172,6 +180,12 @@ export const DistribuicaoUpdate = () => {
       return;
     }
 
+    // Instead of saving directly, open confirmation modal
+    toggleConfirmModal();
+  };
+
+  // Separate async function for the actual save operation
+  const confirmAndSave = async () => {
     // Estrutura conforme sua API espera
     const entity = {
       estoqueId: Number(formData.estoqueId),
@@ -200,10 +214,12 @@ export const DistribuicaoUpdate = () => {
         });
       }
       console.log('Resposta do servidor:', response.data);
+      toggleConfirmModal();
       handleClose();
     } catch (error) {
       console.error('Erro ao salvar:', error);
       console.error('Dados do erro:', error.response?.data);
+      toggleConfirmModal();
       alert('Erro ao realizar a distribuição. Verifique os dados e tente novamente.');
     }
   };
@@ -219,6 +235,50 @@ export const DistribuicaoUpdate = () => {
 
   return (
     <div className="distribuicao-update-page">
+      {/* Confirmation Modal */}
+      <Modal isOpen={confirmModalOpen} toggle={toggleConfirmModal}>
+        <ModalHeader toggle={toggleConfirmModal}>Confirmar Distribuição</ModalHeader>
+        <ModalBody>
+          <div className="confirmation-details">
+            <p>
+              <strong>Você está prestes a distribuir:</strong>
+            </p>
+            <ul>
+              <li>
+                <strong>Volume:</strong> {formData.volumeDistribuidoMl} mL
+              </li>
+              <li>
+                <strong>Estoque ID:</strong> {formData.estoqueId}
+                {estoqueDisponivel.tipoLeite && (
+                  <span>
+                    {' '}
+                    ({estoqueDisponivel.tipoLeite} - {estoqueDisponivel.classificacaoLeite})
+                  </span>
+                )}
+              </li>
+              <li>
+                <strong>Paciente ID:</strong> {formData.pacienteId}
+                {pacientes?.find(p => p.id?.toString() === formData.pacienteId)?.nome && (
+                  <span> ({pacientes.find(p => p.id?.toString() === formData.pacienteId)?.nome})</span>
+                )}
+              </li>
+              <li>
+                <strong>Responsável pela Entrega:</strong> {formData.responsavelEntrega}
+              </li>
+            </ul>
+            <p className="text-danger">Esta ação não pode ser desfeita. Deseja continuar?</p>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={toggleConfirmModal}>
+            Cancelar
+          </Button>
+          <Button color="primary" onClick={confirmAndSave} disabled={updating}>
+            {updating ? 'Processando...' : 'Confirmar Distribuição'}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
       <div className="container">
         <Row className="justify-content-center">
           <Col lg="10">
