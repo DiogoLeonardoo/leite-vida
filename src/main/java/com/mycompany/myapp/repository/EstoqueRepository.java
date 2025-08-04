@@ -35,26 +35,30 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Long>, JpaSpec
 
     @Query(
         value = """
-        SELECT
-            e.id,
-            e.data_validade,
-            e.tipo_leite,
-            e.classificacao,
-            e.volume_disponivel_ml,
-            d.nome,
-            d.cpf,
-            d.telefone
-        FROM
-            estoque e
-        JOIN
-            processamento p ON p.estoque_id = e.id
-        JOIN
-            coleta c ON c.id = p.coleta_id
-        JOIN
-            doadora d ON d.id = c.doadora_id
-        WHERE
-            e.id = :estoqueId
-        """,
+             SELECT
+                 e.id,
+                 e.data_validade,
+                 e.tipo_leite,
+                 e.classificacao,
+                 e.volume_disponivel_ml,
+                 d.nome,
+                 d.cpf,
+                 d.telefone,
+                 p.tecnico_responsavel,
+        p.data_processamento,
+        p.valor_acidez_dornic,
+        p.valor_calorico_kcal
+             FROM
+                 estoque e
+             JOIN
+                 processamento p ON p.estoque_id = e.id
+             JOIN
+                 coleta c ON c.id = p.coleta_id
+             JOIN
+                 doadora d ON d.id = c.doadora_id
+             WHERE
+                 e.id = :estoqueId
+             """,
         nativeQuery = true
     )
     List<Object[]> buscarDoadoraEstoque(@Param("estoqueId") Long estoqueId);
