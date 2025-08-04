@@ -3,17 +3,23 @@ package com.mycompany.myapp.service;
 import com.mycompany.myapp.domain.Distribuicao;
 import com.mycompany.myapp.domain.Estoque;
 import com.mycompany.myapp.domain.Paciente;
+import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
 import com.mycompany.myapp.domain.enumeration.StatusLote;
+import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.DistribuicaoRepository;
 import com.mycompany.myapp.repository.EstoqueRepository;
 import com.mycompany.myapp.repository.PacienteRepository;
 import com.mycompany.myapp.service.dto.DistribuicaoDTO;
+import com.mycompany.myapp.service.dto.DistribuicaoDetalhesDTO;
 import com.mycompany.myapp.service.dto.DistribuicaoRequestDTO;
 import com.mycompany.myapp.service.mapper.DistribuicaoMapper;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -145,5 +151,57 @@ public class DistribuicaoService {
 
         distribuicaoRepository.save(distribuicao);
         return true;
+    }
+
+    /**
+     * Busca detalhes de uma distribuição específica.
+     *
+     * @param idDistribuicao o ID da distribuição a ser consultada
+     * @return DTO com os detalhes da distribuição ou null se não encontrado
+     */
+    @Transactional(readOnly = true)
+    public DistribuicaoDetalhesDTO buscarDetalhesDistribuicao(Long idDistribuicao) {
+        LOG.debug("Request to get details for Distribuicao : {}", idDistribuicao);
+
+        List<Object[]> results = distribuicaoRepository.buscarDetalhesDistribuicao(idDistribuicao);
+
+        if (results == null || results.isEmpty()) {
+            return null;
+        }
+
+        Object[] row = results.get(0);
+        DistribuicaoDetalhesDTO dto = new DistribuicaoDetalhesDTO();
+
+        // Mapeamento dos resultados para o DTO
+        dto.setNomePaciente((String) row[0]);
+        dto.setTelefoneResponsavel((String) row[1]);
+        dto.setCpfResponsavel((String) row[2]);
+        dto.setParentescoResponsavel((String) row[3]);
+        dto.setEstoqueId(row[4] != null ? ((Number) row[4]).longValue() : null);
+
+        // Conversão de Strings para enums
+        if (row[5] != null) {
+            try {
+                dto.setTipoLeite(TipoLeite.valueOf((String) row[5]));
+            } catch (IllegalArgumentException e) {
+                LOG.warn("Tipo de leite inválido: {}", row[5]);
+            }
+        }
+
+        if (row[6] != null) {
+            try {
+                dto.setClassificacao(ClassificacaoLeite.valueOf((String) row[6]));
+            } catch (IllegalArgumentException e) {
+                LOG.warn("Classificação de leite inválida: {}", row[6]);
+            }
+        }
+
+        dto.setNomeDoadora((String) row[7]);
+
+        return dto;
+    }
+
+    public Page<Distribuicao> buscarDistribuicoesComFiltros(String searchTerm, Pageable pageable) {
+        return distribuicaoRepository.buscarDistribuicoesPorPaciente(searchTerm, pageable);
     }
 }
