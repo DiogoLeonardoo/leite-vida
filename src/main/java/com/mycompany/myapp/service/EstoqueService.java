@@ -2,6 +2,7 @@ package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Estoque;
 import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.StatusLote;
 import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.EstoqueRepository;
 import com.mycompany.myapp.service.dto.EstoqueDTO;
@@ -124,8 +125,8 @@ public class EstoqueService {
         return estoqueRepository.somarVolumeDisponivelMl();
     }
 
-    public Page<Estoque> buscarTodos(TipoLeite tipoLeite, ClassificacaoLeite classificacao, Pageable pageable) {
-        return estoqueRepository.buscarComFiltros(tipoLeite, classificacao, pageable);
+    public Page<Estoque> buscarTodos(TipoLeite tipoLeite, ClassificacaoLeite classificacao, StatusLote statusLote, Pageable pageable) {
+        return estoqueRepository.buscarComFiltros(tipoLeite, classificacao, statusLote, pageable);
     }
 
     public EstoqueDoadoraDTO buscarDetalhesEstoque(Long estoqueId) {

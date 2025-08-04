@@ -230,9 +230,10 @@ public class EstoqueResource {
     public ResponseEntity<Page<Estoque>> listarEstoques(
         @RequestParam(required = false) TipoLeite tipoLeite,
         @RequestParam(required = false) ClassificacaoLeite classificacao,
+        @RequestParam(required = false) StatusLote statusLote,
         @ParameterObject Pageable pageable
     ) {
-        Page<Estoque> estoques = estoqueService.buscarTodos(tipoLeite, classificacao, pageable);
+        Page<Estoque> estoques = estoqueService.buscarTodos(tipoLeite, classificacao, statusLote, pageable);
         return ResponseEntity.ok(estoques);
     }
 
