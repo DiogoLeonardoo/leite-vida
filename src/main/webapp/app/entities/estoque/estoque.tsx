@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button, Table, Input, Modal, ModalHeader, ModalBody, ModalFooter, Row, Col } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
@@ -27,6 +27,10 @@ export const Estoque = () => {
 
   const [tipoLeiteFilter, setTipoLeiteFilter] = useState('');
   const [classificacaoFilter, setClassificacaoFilter] = useState('');
+  const [statusLoteFilter, setStatusLoteFilter] = useState('');
+
+  // Add debounce timer ref
+  const [searchTimeout, setSearchTimeout] = useState(null);
 
   const [estoqueList, setEstoqueList] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -45,6 +49,7 @@ export const Estoque = () => {
         sort: `${paginationState.sort},${paginationState.order}`,
         ...(tipoLeiteFilter && { tipoLeite: tipoLeiteFilter }),
         ...(classificacaoFilter && { classificacao: classificacaoFilter }),
+        ...(statusLoteFilter && { statusLote: statusLoteFilter }),
       };
 
       console.log('Fetching estoques with params:', params);
@@ -79,16 +84,91 @@ export const Estoque = () => {
     }
   };
 
+  // Create a debounced search function
+  const debouncedSearch = useCallback(
+    (tipo, classificacao, status) => {
+      // Clear any existing timeout
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+
+      // Set a new timeout
+      const timeoutId = setTimeout(() => {
+        const params = {
+          page: paginationState.activePage - 1,
+          size: paginationState.itemsPerPage,
+          sort: `${paginationState.sort},${paginationState.order}`,
+          ...(tipo && { tipoLeite: tipo }),
+          ...(classificacao && { classificacao }),
+          ...(status && { statusLote: status }),
+        };
+
+        // If already on page 1, fetch with current pagination
+        setLoading(true);
+        axios
+          .get('/api/estoques/buscar-estoques', { params })
+          .then(response => {
+            const responseData = response.data;
+
+            let estoques = [];
+            let totalCount = 0;
+
+            if (Array.isArray(responseData)) {
+              estoques = responseData;
+              totalCount = responseData.length;
+            } else if (responseData && typeof responseData === 'object') {
+              estoques = responseData.content || responseData.data || [];
+              totalCount =
+                responseData.totalElements || responseData.total || parseInt(response.headers['x-total-count'], 10) || estoques.length;
+            }
+
+            setEstoqueList(estoques);
+            setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+          })
+          .catch(error => {
+            console.error('Error fetching estoques:', error);
+            setEstoqueList([]);
+            setTotalItems(0);
+          })
+          .finally(() => {
+            setLoading(false);
+          });
+      }, 500); // 500ms debounce
+
+      setSearchTimeout(timeoutId);
+    },
+    [paginationState, setEstoqueList, setTotalItems, setLoading],
+  );
+
+  // Handle filter changes with debounce
+  const handleTipoLeiteChange = e => {
+    const value = e.target.value;
+    setTipoLeiteFilter(value);
+    debouncedSearch(value, classificacaoFilter, statusLoteFilter);
+  };
+
+  const handleClassificacaoChange = e => {
+    const value = e.target.value;
+    setClassificacaoFilter(value);
+    debouncedSearch(tipoLeiteFilter, value, statusLoteFilter);
+  };
+
+  const handleStatusLoteChange = e => {
+    const value = e.target.value;
+    setStatusLoteFilter(value);
+    debouncedSearch(tipoLeiteFilter, classificacaoFilter, value);
+  };
+
+  const handleClearFilters = () => {
+    setTipoLeiteFilter('');
+    setClassificacaoFilter('');
+    setStatusLoteFilter('');
+    debouncedSearch('', '', '');
+  };
+
   useEffect(() => {
     fetchEstoques();
-  }, [
-    tipoLeiteFilter,
-    classificacaoFilter,
-    paginationState.activePage,
-    paginationState.order,
-    paginationState.sort,
-    paginationState.itemsPerPage,
-  ]);
+  }, [paginationState.activePage, paginationState.order, paginationState.sort, paginationState.itemsPerPage]);
 
   useEffect(() => {
     const params = new URLSearchParams(pageLocation.search);
@@ -204,7 +284,7 @@ export const Estoque = () => {
             className="me-2"
             style={{ width: '200px', height: '48px' }}
             value={tipoLeiteFilter}
-            onChange={e => setTipoLeiteFilter(e.target.value)}
+            onChange={handleTipoLeiteChange}
           >
             <option value="">Todos os tipos</option>
             <option value="COLOSTRO">Colostro</option>
@@ -217,7 +297,7 @@ export const Estoque = () => {
             className="me-2"
             style={{ width: '200px', height: '48px' }}
             value={classificacaoFilter}
-            onChange={e => setClassificacaoFilter(e.target.value)}
+            onChange={handleClassificacaoChange}
           >
             <option value="">Todas as classificações</option>
             <option value="A">A</option>
@@ -225,14 +305,21 @@ export const Estoque = () => {
             <option value="C">C</option>
           </Input>
 
-          <Button
+          <Input
+            type="select"
             className="me-2"
-            style={{ height: '48px', background: '#7ad27d', border: 'none' }}
-            onClick={() => {
-              setTipoLeiteFilter('');
-              setClassificacaoFilter('');
-            }}
+            style={{ width: '200px', height: '48px' }}
+            value={statusLoteFilter}
+            onChange={handleStatusLoteChange}
           >
+            <option value="">Todos os status</option>
+            <option value="DISPONIVEL">Disponível</option>
+            <option value="RESERVADO">Reservado</option>
+            <option value="DISTRIBUIDO">Distribuído</option>
+            <option value="EXPIRADO">Expirado</option>
+          </Input>
+
+          <Button className="me-2" style={{ height: '48px', background: '#7ad27d', border: 'none' }} onClick={handleClearFilters}>
             Limpar Filtros
           </Button>
         </div>
@@ -327,51 +414,132 @@ export const Estoque = () => {
               </div>
             </div>
           ) : estoqueDetalhes ? (
-            <div>
-              <div className="row">
-                <div className="col-md-6">
-                  <h5>Informações do Lote</h5>
-                  <p>
-                    <strong>ID:</strong> {estoqueDetalhes.estoqueId}
-                  </p>
-                  <p>
-                    <strong>Data de Validade:</strong>{' '}
-                    {estoqueDetalhes.dataValidade ? (
-                      <TextFormat type="date" value={estoqueDetalhes.dataValidade} format={APP_LOCAL_DATE_FORMAT} />
-                    ) : (
-                      'N/A'
-                    )}
-                  </p>
-                  <p>
-                    <strong>Tipo de Leite:</strong> <Translate contentKey={`leiteVidaApp.TipoLeite.${estoqueDetalhes.tipoLeite}`} />
-                  </p>
-                  <p>
-                    <strong>Classificação:</strong>{' '}
-                    <Translate contentKey={`leiteVidaApp.ClassificacaoLeite.${estoqueDetalhes.classificacao}`} />
-                  </p>
-                  <p>
-                    <strong>Volume Disponível (mL):</strong> {estoqueDetalhes.volumeDisponivelMl}
-                  </p>
+            <div className="estoque-detalhes">
+              {/* Seção de informações do lote */}
+              <div className="card mb-4">
+                <div className="card-header bg-light">
+                  <h5 className="mb-0">Informações do Lote</h5>
                 </div>
-                <div className="col-md-6">
-                  <h5>Informações da Doadora</h5>
-                  <p>
-                    <strong>Nome:</strong> {estoqueDetalhes.nomeDoadora}
-                  </p>
-                  <p>
-                    <strong>CPF:</strong> {estoqueDetalhes.cpfDoadora}
-                  </p>
-                  <p>
-                    <strong>Telefone:</strong> {estoqueDetalhes.telefoneDoadora}
-                  </p>
+                <div className="card-body">
+                  <Row>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">ID do Lote</label>
+                        <span className="fw-bold">{estoqueDetalhes.estoqueId}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Data de Validade</label>
+                        <span className="fw-bold">
+                          {estoqueDetalhes.dataValidade ? (
+                            <TextFormat type="date" value={estoqueDetalhes.dataValidade} format={APP_LOCAL_DATE_FORMAT} />
+                          ) : (
+                            'N/A'
+                          )}
+                        </span>
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Tipo de Leite</label>
+                        <span className="fw-bold">
+                          <Translate contentKey={`leiteVidaApp.TipoLeite.${estoqueDetalhes.tipoLeite}`} />
+                        </span>
+                      </div>
+                    </Col>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Classificação</label>
+                        <span className="fw-bold">
+                          <Translate contentKey={`leiteVidaApp.ClassificacaoLeite.${estoqueDetalhes.classificacao}`} />
+                        </span>
+                      </div>
+                    </Col>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Volume Disponível (mL)</label>
+                        <span className="fw-bold">{estoqueDetalhes.volumeDisponivelMl}</span>
+                      </div>
+                    </Col>
+                  </Row>
                 </div>
-                <Row>
-                  <h5>Informações do Processamento</h5>
-                  <Col>
-                    <p>Técnico responsável pelo processamento</p>
-                    <strong>{estoqueDetalhes.tecnicoResponsavel}</strong>
-                  </Col>
-                </Row>
+              </div>
+
+              {/* Seção de informações da doadora */}
+              <div className="card mb-4">
+                <div className="card-header bg-light">
+                  <h5 className="mb-0">Informações da Doadora</h5>
+                </div>
+                <div className="card-body">
+                  <Row>
+                    <Col md={12}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Nome</label>
+                        <span className="fw-bold">{estoqueDetalhes.nomeDoadora}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">CPF</label>
+                        <span className="fw-bold">{estoqueDetalhes.cpfDoadora}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Telefone</label>
+                        <span className="fw-bold">{estoqueDetalhes.telefoneDoadora}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+
+              {/* Seção de informações do processamento */}
+              <div className="card">
+                <div className="card-header bg-light">
+                  <h5 className="mb-0">Informações do Processamento</h5>
+                </div>
+                <div className="card-body">
+                  <Row>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Técnico Responsável</label>
+                        <span className="fw-bold">{estoqueDetalhes.tecnicoResponsavel}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Data do Processamento</label>
+                        <span className="fw-bold">
+                          {estoqueDetalhes.dataProcessamento ? (
+                            <TextFormat type="date" value={estoqueDetalhes.dataProcessamento} format={APP_LOCAL_DATE_FORMAT} />
+                          ) : (
+                            'N/A'
+                          )}
+                        </span>
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Valor Acidez Dornic</label>
+                        <span className="fw-bold">{estoqueDetalhes.valorAcidezDornic}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Valor Calórico (Kcal)</label>
+                        <span className="fw-bold">{estoqueDetalhes.valorCaloricoKcal}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
               </div>
             </div>
           ) : (
