@@ -71,7 +71,7 @@ export const Home = () => {
   };
 
   const handleNovaDistribuicao = () => {
-    navigate('/paciente/new');
+    navigate('/distribuicao/new');
   };
 
   const handleRealizarAnalises = () => {
