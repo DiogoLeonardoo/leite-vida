@@ -44,6 +44,7 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Long>, JpaSpec
             e.tipo_leite,
             e.classificacao,
             e.volume_disponivel_ml,
+            e.temperatura_armazenamento,
             d.nome,
             d.cpf,
             d.telefone,

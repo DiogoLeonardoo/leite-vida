@@ -95,10 +95,6 @@ export const Processamento = () => {
       <h2 className="processamento-list-title">
         <Translate contentKey="leiteVidaApp.processamento.home.title">Processamentos</Translate>
         <div className="d-flex">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
-            <FontAwesomeIcon icon="sync" spin={loading} />{' '}
-            <Translate contentKey="leiteVidaApp.processamento.home.refreshListLabel">Refresh List</Translate>
-          </Button>
           <Link to="/processamento/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
             <FontAwesomeIcon icon="plus" />
             &nbsp;

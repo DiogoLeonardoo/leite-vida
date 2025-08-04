@@ -141,13 +141,14 @@ public class EstoqueService {
             (String) result[2],
             (String) result[3],
             ((Number) result[4]).doubleValue(),
-            (String) result[5],
+            ((Number) result[5]).doubleValue(),
             (String) result[6],
             (String) result[7],
             (String) result[8],
-            ((java.sql.Date) result[9]).toLocalDate(),
-            ((Number) result[10]).doubleValue(),
-            ((Number) result[11]).doubleValue()
+            (String) result[9],
+            ((java.sql.Date) result[10]).toLocalDate(),
+            ((Number) result[11]).doubleValue(),
+            ((Number) result[12]).doubleValue()
         );
     }
 }

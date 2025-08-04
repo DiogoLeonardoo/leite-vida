@@ -422,13 +422,13 @@ export const Estoque = () => {
                 </div>
                 <div className="card-body">
                   <Row>
-                    <Col md={6}>
+                    <Col md={4}>
                       <div className="mb-3">
                         <label className="text-muted d-block">ID do Lote</label>
                         <span className="fw-bold">{estoqueDetalhes.estoqueId}</span>
                       </div>
                     </Col>
-                    <Col md={6}>
+                    <Col md={4}>
                       <div className="mb-3">
                         <label className="text-muted d-block">Data de Validade</label>
                         <span className="fw-bold">
@@ -438,6 +438,12 @@ export const Estoque = () => {
                             'N/A'
                           )}
                         </span>
+                      </div>
+                    </Col>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Temperatura de armazenamento</label>
+                        <span className="fw-bold">{estoqueDetalhes.temperaturaArmazenamento}°C</span>
                       </div>
                     </Col>
                   </Row>
