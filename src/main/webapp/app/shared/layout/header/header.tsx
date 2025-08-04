@@ -60,7 +60,6 @@ const Header = (props: IHeaderProps) => {
                   {props.isAuthenticated && <Coleta />}
                   {!isLab && <Distribuicao />}
                   {!isLab && <Estoque />}
-                  {isLab && <Processamentos />}
                   {props.isAdmin && <Users />}
                   {/* {props.isAdmin && <AdminMenu showOpenAPI={props.isOpenAPIEnabled} />} */}
                 </>
