@@ -13,6 +13,7 @@ import Coleta from './coleta';
 import Processamento from './processamento';
 import Estoque from './estoque';
 import Distribuicao from './distribuicao';
+import Relatorios from './relatorio/relatorios';
 /* jhipster-needle-add-route-import - JHipster will add routes here */
 
 const EntitiesRoutesWrapper = () => {
@@ -39,6 +40,7 @@ const EntitiesRoutesWrapper = () => {
         <Route path="processamento/*" element={isAdmin || isLabUser ? <Processamento /> : <Navigate to="/unauthorized" replace />} />
         <Route path="estoque/*" element={isAdmin || isEnfUser ? <Estoque /> : <Navigate to="/unauthorized" replace />} />
         <Route path="distribuicao/*" element={isAdmin || isEnfUser ? <Distribuicao /> : <Navigate to="/unauthorized" replace />} />
+        <Route path="relatorio" element={isAdmin || isLabUser || isEnfUser ? <Relatorios /> : <Navigate to="/unauthorized" replace />} />
         {/* jhipster-needle-add-route-path - JHipster will add routes here */}
       </ErrorBoundaryRoutes>
     </div>

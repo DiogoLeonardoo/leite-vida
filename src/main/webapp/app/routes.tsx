@@ -17,6 +17,7 @@ import PageNotFound from 'app/shared/error/page-not-found';
 import Unauthorized from 'app/shared/error/unauthorized';
 import { AUTHORITIES } from 'app/config/constants';
 import PasswordChange from './modules/account/password-change/password-change';
+import Relatorios from './entities/relatorio/relatorios';
 
 const loading = <div>loading ...</div>;
 
@@ -78,6 +79,16 @@ const AppRoutes = () => {
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="relatorios"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
+              <Relatorios />
+            </PrivateRoute>
+          }
+        />
+
         <Route path="*" element={<PageNotFound />} />
       </ErrorBoundaryRoutes>
     </div>
