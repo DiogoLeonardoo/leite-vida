@@ -162,63 +162,61 @@ export const DoadoraUpdate = () => {
     }
   };
 
+  // Add this useEffect to validate form whenever formData changes
+  useEffect(() => {
+    validateForm(false);
+  }, [formData]);
+
   const validateForm = (showToast = false) => {
-    const camposObrigatorios = {
-      CPF: formData.cpf?.trim(),
-      CEP: formData.cep?.trim(),
-      Telefone: formData.telefone?.trim(),
-      'Nome Completo': formData.nome?.trim(),
-      'Cartão SUS': formData.cartaoSUS?.trim(),
-      'Data de Nascimento': formData.dataNascimento?.trim(),
-      Profissão: formData.profissao?.trim(),
-      Estado: formData.estado?.trim(),
-      Cidade: formData.cidade?.trim(),
-      Endereço: formData.endereco?.trim(),
-      'Tipo de Doadora': formData.tipoDoadora,
-      'Local do Pré-Natal': formData.localPreNatal,
-      'Resultado VDRL': formData.resultadoVDRL,
-      'Resultado HBsAg': formData.resultadoHBsAg,
-      'Resultado FTA-abs': formData.resultadoFTAabs,
-      'Resultado HIV': formData.resultadoHIV,
+    // Define required fields
+    const requiredFields = {
+      cpf: 'CPF',
+      nome: 'Nome Completo',
+      telefone: 'Telefone',
+      dataNascimento: 'Data de Nascimento',
+      tipoDoadora: 'Tipo de Doadora',
+      cep: 'CEP',
+      estado: 'Estado',
+      cidade: 'Cidade',
+      endereco: 'Endereço',
     };
 
-    const camposVazios = Object.entries(camposObrigatorios)
-      .filter(([_, value]) => !value)
-      .map(([nome]) => nome);
+    // Check for empty required fields
+    const emptyFields = Object.entries(requiredFields)
+      .filter(([field]) => !formData[field]?.trim())
+      .map(([_, label]) => label);
 
-    // Validate specific format fields if they have values
-    const camposComFormato = [];
+    // Validate specific format fields
+    const formatErrors = [];
     if (formData.cpf && !validateCPF(formData.cpf)) {
-      camposComFormato.push('CPF inválido');
+      formatErrors.push('CPF inválido');
     }
     if (formData.cep && !validateCEP(formData.cep)) {
-      camposComFormato.push('CEP inválido');
+      formatErrors.push('CEP inválido');
     }
     if (formData.telefone && !validatePhone(formData.telefone)) {
-      camposComFormato.push('Telefone inválido');
+      formatErrors.push('Telefone inválido');
     }
     if (formData.dataNascimento) {
       const today = new Date();
       const birthDate = new Date(formData.dataNascimento);
       const age = today.getFullYear() - birthDate.getFullYear();
-      if (age < 18) {
-        camposComFormato.push('Doadora deve ser maior de 18 anos');
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (age < 18 || (age === 18 && monthDiff < 0) || (age === 18 && monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        formatErrors.push('Doadora deve ser maior de 18 anos');
       }
     }
 
-    if (showToast && camposVazios.length > 0) {
-      toast.info(`Preencha os campos obrigatórios: ${camposVazios.join(', ')}`);
-      setIsFormValid(false);
-      return false;
+    // Display toast messages if requested
+    if (showToast) {
+      if (emptyFields.length > 0) {
+        toast.error(`Preencha os campos obrigatórios: ${emptyFields.join(', ')}`);
+      } else if (formatErrors.length > 0) {
+        toast.info(`Corrija os seguintes campos: ${formatErrors.join(', ')}`);
+      }
     }
 
-    if (showToast && camposComFormato.length > 0) {
-      toast.info(`Corrija os seguintes campos: ${camposComFormato.join(', ')}`);
-      setIsFormValid(false);
-      return false;
-    }
-
-    const isValid = camposVazios.length === 0 && camposComFormato.length === 0;
+    const isValid = emptyFields.length === 0 && formatErrors.length === 0;
     setIsFormValid(isValid);
     return isValid;
   };
@@ -252,7 +250,8 @@ export const DoadoraUpdate = () => {
       }));
     }
 
-    setTimeout(() => validateForm(false), 100);
+    // Remove this setTimeout as we now use useEffect for validation
+    // setTimeout(() => validateForm(false), 100);
   };
 
   const handleCEPBlur = () => {
@@ -265,14 +264,9 @@ export const DoadoraUpdate = () => {
   };
 
   const saveEntity = values => {
-    console.log('Form values from ValidatedForm:', values);
-    console.log('Current formData state:', formData);
-
     const isFormValid = validateForm(true);
-    console.log('Form is valid:', isFormValid);
 
     if (!isFormValid) {
-      console.log('Form validation failed');
       return;
     }
 
