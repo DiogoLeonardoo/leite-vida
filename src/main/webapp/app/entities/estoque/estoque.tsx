@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table, Input, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
+import { Button, Table, Input, Modal, ModalHeader, ModalBody, ModalFooter, Row, Col } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSort, faSortDown, faSortUp, faEye } from '@fortawesome/free-solid-svg-icons';
@@ -11,6 +11,7 @@ import { useAppSelector } from 'app/config/store';
 import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import axios from 'axios';
 import './estoque.scss';
+import { toast } from 'react-toastify';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -162,7 +163,9 @@ export const Estoque = () => {
       await axios.patch(`/api/estoques/${estoqueId}/reservar`);
 
       await fetchEstoques();
-    } catch (error) {}
+    } catch (error) {
+      toast.error('Erro ao reservar estoque');
+    }
   };
 
   const handleLiberar = async estoqueId => {
@@ -170,7 +173,9 @@ export const Estoque = () => {
       await axios.patch(`/api/estoques/${estoqueId}/liberar`);
 
       await fetchEstoques();
-    } catch (error) {}
+    } catch (error) {
+      toast.error('Erro ao liberar estoque');
+    }
   };
 
   const getStatusStyle = status => {
@@ -360,6 +365,13 @@ export const Estoque = () => {
                     <strong>Telefone:</strong> {estoqueDetalhes.telefoneDoadora}
                   </p>
                 </div>
+                <Row>
+                  <h5>Informações do Processamento</h5>
+                  <Col>
+                    <p>Técnico responsável pelo processamento</p>
+                    <strong>{estoqueDetalhes.tecnicoResponsavel}</strong>
+                  </Col>
+                </Row>
               </div>
             </div>
           ) : (
