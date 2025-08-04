@@ -1,9 +1,17 @@
 package com.mycompany.myapp.web.rest;
 
 import com.mycompany.myapp.domain.Distribuicao;
+import com.mycompany.myapp.domain.Estoque;
+import com.mycompany.myapp.domain.Paciente;
 import com.mycompany.myapp.repository.DistribuicaoRepository;
+import com.mycompany.myapp.repository.EstoqueRepository;
+import com.mycompany.myapp.repository.PacienteRepository;
+import com.mycompany.myapp.service.DistribuicaoComprovanteService;
 import com.mycompany.myapp.service.DistribuicaoQueryService;
 import com.mycompany.myapp.service.DistribuicaoService;
+import com.mycompany.myapp.service.DoadoraService;
+import com.mycompany.myapp.service.EstoqueService;
+import com.mycompany.myapp.service.PacienteService;
 import com.mycompany.myapp.service.criteria.DistribuicaoCriteria;
 import com.mycompany.myapp.service.dto.DistribuicaoDTO;
 import com.mycompany.myapp.service.dto.DistribuicaoDetalhesDTO;
@@ -21,7 +29,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -49,14 +60,26 @@ public class DistribuicaoResource {
 
     private final DistribuicaoQueryService distribuicaoQueryService;
 
+    private final EstoqueRepository estoqueRepository;
+
+    private final PacienteRepository pacienteRepository;
+
+    private final DistribuicaoComprovanteService comprovanteService;
+
     public DistribuicaoResource(
         DistribuicaoService distribuicaoService,
         DistribuicaoRepository distribuicaoRepository,
-        DistribuicaoQueryService distribuicaoQueryService
+        DistribuicaoQueryService distribuicaoQueryService,
+        EstoqueRepository estoqueRepository,
+        PacienteRepository pacienteRepository,
+        DistribuicaoComprovanteService comprovanteService
     ) {
         this.distribuicaoService = distribuicaoService;
         this.distribuicaoRepository = distribuicaoRepository;
         this.distribuicaoQueryService = distribuicaoQueryService;
+        this.estoqueRepository = estoqueRepository;
+        this.pacienteRepository = pacienteRepository;
+        this.comprovanteService = comprovanteService;
     }
 
     /**
@@ -208,13 +231,37 @@ public class DistribuicaoResource {
     }
 
     @PostMapping("/realizar-distribuicao")
-    public ResponseEntity<String> realizarDistribuicao(@RequestBody DistribuicaoRequestDTO dto) {
-        boolean sucesso = distribuicaoService.realizarDistribuicao(dto);
+    public ResponseEntity<byte[]> realizarDistribuicao(@RequestBody DistribuicaoRequestDTO dto) {
+        try {
+            LOG.debug("REST request para realizar distribuição: {}", dto);
+            boolean sucesso = distribuicaoService.realizarDistribuicao(dto);
 
-        if (sucesso) {
-            return ResponseEntity.ok("Distribuição realizada com sucesso.");
-        } else {
-            return ResponseEntity.badRequest().body("Erro ao realizar a distribuição. Verifique os dados.");
+            if (!sucesso) {
+                LOG.warn("Falha ao realizar distribuição para os dados: {}", dto);
+                return ResponseEntity.badRequest().body("Erro ao realizar a distribuição. Verifique os dados.".getBytes());
+            }
+
+            Estoque estoque = estoqueRepository
+                .findById(dto.getEstoqueId())
+                .orElseThrow(() -> new RuntimeException("Estoque não encontrado com ID: " + dto.getEstoqueId()));
+
+            Paciente paciente = pacienteRepository
+                .findById(dto.getPacienteId())
+                .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + dto.getPacienteId()));
+
+            byte[] pdfBytes = comprovanteService.gerarComprovantePdf(dto, estoque, paciente);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(
+                ContentDisposition.builder("attachment").filename("distribuicao_" + System.currentTimeMillis() + ".pdf").build()
+            );
+
+            LOG.debug("Distribuição realizada com sucesso, retornando PDF");
+            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+        } catch (Exception e) {
+            LOG.error("Erro ao processar distribuição", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(("Erro interno: " + e.getMessage()).getBytes());
         }
     }
 

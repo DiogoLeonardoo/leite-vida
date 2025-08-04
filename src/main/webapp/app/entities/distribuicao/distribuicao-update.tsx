@@ -202,25 +202,52 @@ export const DistribuicaoUpdate = () => {
       let response;
       if (isNew) {
         response = await axios.post('/api/distribuicaos/realizar-distribuicao', entity, {
+          responseType: 'blob', // Importante para receber o PDF como blob
           headers: {
             'Content-Type': 'application/json',
           },
         });
       } else {
         response = await axios.put(`/api/distribuicaos/${distribuicaoEntity?.id}`, entity, {
+          responseType: 'blob', // Importante para receber o PDF como blob
           headers: {
             'Content-Type': 'application/json',
           },
         });
       }
-      console.log('Resposta do servidor:', response.data);
+
+      // Verifica se a resposta é um PDF
+      const contentType = response.headers['content-type'];
+      if (contentType && contentType.includes('application/pdf')) {
+        // Cria um URL do blob e abre em uma nova aba
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+
+        // Libera o objeto URL após um tempo
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } else {
+        console.log('Resposta do servidor:', response.data);
+      }
+
       toggleConfirmModal();
       handleClose();
     } catch (error) {
       console.error('Erro ao salvar:', error);
       console.error('Dados do erro:', error.response?.data);
       toggleConfirmModal();
-      alert('Erro ao realizar a distribuição. Verifique os dados e tente novamente.');
+
+      // Se o erro retornar um blob, pode ser uma mensagem de erro em formato de texto
+      if (error.response?.data instanceof Blob) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const errorMessage = reader.result as string;
+          alert(`Erro ao realizar a distribuição: ${errorMessage}`);
+        };
+        reader.readAsText(error.response.data);
+      } else {
+        alert('Erro ao realizar a distribuição. Verifique os dados e tente novamente.');
+      }
     }
   };
 
