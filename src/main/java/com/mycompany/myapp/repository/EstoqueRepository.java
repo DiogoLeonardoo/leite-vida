@@ -2,6 +2,7 @@ package com.mycompany.myapp.repository;
 
 import com.mycompany.myapp.domain.Estoque;
 import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.StatusLote;
 import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.service.dto.EstoqueDoadoraDTO;
 import java.util.List;
@@ -25,11 +26,13 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Long>, JpaSpec
             SELECT e FROM Estoque e
             WHERE (:tipoLeite IS NULL OR e.tipoLeite = :tipoLeite)
               AND (:classificacao IS NULL OR e.classificacao = :classificacao)
+              AND (:statusLote IS NULL OR e.statusLote = :statusLote)
         """
     )
     Page<Estoque> buscarComFiltros(
         @Param("tipoLeite") TipoLeite tipoLeite,
         @Param("classificacao") ClassificacaoLeite classificacao,
+        @Param("statusLote") StatusLote statusLote,
         Pageable pageable
     );
 
@@ -43,7 +46,11 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Long>, JpaSpec
             e.volume_disponivel_ml,
             d.nome,
             d.cpf,
-            d.telefone
+            d.telefone,
+            p.tecnico_responsavel,
+            p.data_processamento,
+            p.valor_acidez_dornic,
+            p.valor_calorico_kcal
         FROM
             estoque e
         JOIN

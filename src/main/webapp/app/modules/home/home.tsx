@@ -55,32 +55,27 @@ export const Home = () => {
   };
 
   const handleNovaDoadora = () => {
-    // Implementar navegação para nova doadora
     navigate('/doadora/new');
   };
 
   const handleNovoPaciente = () => {
-    // Implementar navegação para novo paciente
     navigate('/paciente/new');
   };
 
   const handleConsultarEstoque = () => {
-    // Implementar navegação para consultar estoque
-    console.log('Consultar Estoque');
+    navigate('/estoque');
   };
 
   const handleUsuarios = () => {
-    // Implementar navegação para usuários
     navigate('/admin/user-management');
   };
 
   const handleNovaDistribuicao = () => {
-    navigate('/paciente/new');
+    navigate('/distribuicao/new');
   };
 
   const handleRealizarAnalises = () => {
-    // Implementar navegação para realizar análises
-    console.log('Realizar Análises');
+    navigate('/coleta');
   };
 
   const isLabUser = account?.authorities?.includes('ROLE_LAB');

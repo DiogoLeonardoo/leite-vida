@@ -1,10 +1,13 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.Distribuicao;
 import com.mycompany.myapp.repository.DistribuicaoRepository;
 import com.mycompany.myapp.service.DistribuicaoQueryService;
 import com.mycompany.myapp.service.DistribuicaoService;
 import com.mycompany.myapp.service.criteria.DistribuicaoCriteria;
 import com.mycompany.myapp.service.dto.DistribuicaoDTO;
+import com.mycompany.myapp.service.dto.DistribuicaoDetalhesDTO;
+import com.mycompany.myapp.service.dto.DistribuicaoRequestDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -202,5 +205,51 @@ public class DistribuicaoResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @PostMapping("/realizar-distribuicao")
+    public ResponseEntity<String> realizarDistribuicao(@RequestBody DistribuicaoRequestDTO dto) {
+        boolean sucesso = distribuicaoService.realizarDistribuicao(dto);
+
+        if (sucesso) {
+            return ResponseEntity.ok("Distribuição realizada com sucesso.");
+        } else {
+            return ResponseEntity.badRequest().body("Erro ao realizar a distribuição. Verifique os dados.");
+        }
+    }
+
+    /**
+     * {@code GET  /distribuicaos/detalhes/:id} : get details of the "id" distribuicao.
+     *
+     * @param id the id of the distribuicao to retrieve details.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the details DTO,
+     * or with status {@code 404 (Not Found)}.
+     */
+    @GetMapping("/detalhes/{id}")
+    public ResponseEntity<DistribuicaoDetalhesDTO> getDetalhesDistribuicao(@PathVariable("id") Long id) {
+        LOG.debug("REST request to get details for Distribuicao : {}", id);
+        DistribuicaoDetalhesDTO detalhes = distribuicaoService.buscarDetalhesDistribuicao(id);
+
+        if (detalhes == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(detalhes);
+    }
+
+    /**
+     * {@code GET  /distribuicaos/buscar} : search for distribuicaos.
+     *
+     * @param searchTerm the term to search for.
+     * @param pageable the pagination information.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the page of distribuicaos in body.
+     */
+    @GetMapping("/buscar")
+    public ResponseEntity<Page<Distribuicao>> buscarDistribuicoesComFiltros(
+        @RequestParam(required = false) String searchTerm,
+        Pageable pageable
+    ) {
+        Page<Distribuicao> page = distribuicaoService.buscarDistribuicoesComFiltros(searchTerm, pageable);
+        return ResponseEntity.ok().body(page);
     }
 }

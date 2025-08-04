@@ -1,51 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table } from 'reactstrap';
+import { Button, Table, Modal, ModalHeader, ModalBody, ModalFooter, Row, Col, Input } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortDown, faSortUp, faEye } from '@fortawesome/free-solid-svg-icons';
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
 import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
-import { useAppDispatch, useAppSelector } from 'app/config/store';
-
-import { getEntities } from './distribuicao.reducer';
+import { useAppSelector } from 'app/config/store';
+import axios from 'axios';
+import './distribuicao.scss';
 
 export const Distribuicao = () => {
-  const dispatch = useAppDispatch();
-
   const pageLocation = useLocation();
   const navigate = useNavigate();
 
   const [paginationState, setPaginationState] = useState(
-    overridePaginationStateWithQueryParams(getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'), pageLocation.search),
+    overridePaginationStateWithQueryParams(
+      {
+        ...getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'),
+        itemsPerPage: 4,
+      },
+      pageLocation.search,
+    ),
   );
 
-  const distribuicaoList = useAppSelector(state => state.distribuicao.entities);
-  const loading = useAppSelector(state => state.distribuicao.loading);
-  const totalItems = useAppSelector(state => state.distribuicao.totalItems);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTimeout, setSearchTimeout] = useState(null);
+  const [distribuicaoList, setDistribuicaoList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDistribuicao, setSelectedDistribuicao] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
+  const [distribuicaoDetalhes, setDistribuicaoDetalhes] = useState(null);
 
-  const getAllEntities = () => {
-    dispatch(
-      getEntities({
+  const fetchDistribuicoes = async () => {
+    setLoading(true);
+    try {
+      const params = {
         page: paginationState.activePage - 1,
         size: paginationState.itemsPerPage,
         sort: `${paginationState.sort},${paginationState.order}`,
-      }),
-    );
-  };
+        ...(searchTerm && { searchTerm }),
+      };
 
-  const sortEntities = () => {
-    getAllEntities();
-    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
-    if (pageLocation.search !== endURL) {
-      navigate(`${pageLocation.pathname}${endURL}`);
+      const response = await axios.get('/api/distribuicaos/buscar', { params });
+
+      const responseData = response.data;
+
+      let distribuicoes = [];
+      let totalCount = 0;
+
+      if (Array.isArray(responseData)) {
+        distribuicoes = responseData;
+        totalCount = responseData.length;
+      } else if (responseData && typeof responseData === 'object') {
+        distribuicoes = responseData.content || responseData.data || [];
+        totalCount =
+          responseData.totalElements || responseData.total || parseInt(response.headers['x-total-count'], 10) || distribuicoes.length;
+      }
+
+      setDistribuicaoList(distribuicoes);
+      setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+    } catch (error) {
+      console.error('Error fetching distributions:', error);
+      setDistribuicaoList([]);
+      setTotalItems(0);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    sortEntities();
-  }, [paginationState.activePage, paginationState.order, paginationState.sort]);
+    fetchDistribuicoes();
+  }, [paginationState.activePage, paginationState.order, paginationState.sort, paginationState.itemsPerPage]);
 
   useEffect(() => {
     const params = new URLSearchParams(pageLocation.search);
@@ -62,6 +91,13 @@ export const Distribuicao = () => {
     }
   }, [pageLocation.search]);
 
+  useEffect(() => {
+    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
+    if (pageLocation.search !== endURL) {
+      navigate(`${pageLocation.pathname}${endURL}`);
+    }
+  }, [paginationState.activePage, paginationState.sort, paginationState.order, navigate, pageLocation.pathname, pageLocation.search]);
+
   const sort = p => () => {
     setPaginationState({
       ...paginationState,
@@ -76,8 +112,94 @@ export const Distribuicao = () => {
       activePage: currentPage,
     });
 
-  const handleSyncList = () => {
-    sortEntities();
+  const debouncedSearch = useCallback(
+    value => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+
+      const timeoutId = setTimeout(() => {
+        const params = {
+          page: paginationState.activePage - 1,
+          size: paginationState.itemsPerPage,
+          sort: `${paginationState.sort},${paginationState.order}`,
+          ...(value && { searchTerm: value }),
+        };
+
+        if (paginationState.activePage !== 1) {
+          setPaginationState({
+            ...paginationState,
+            activePage: 1,
+          });
+        } else {
+          setLoading(true);
+          axios
+            .get('/api/distribuicaos/buscar', { params })
+            .then(response => {
+              const responseData = response.data;
+
+              let distribuicoes = [];
+              let totalCount = 0;
+
+              if (Array.isArray(responseData)) {
+                distribuicoes = responseData;
+                totalCount = responseData.length;
+              } else if (responseData && typeof responseData === 'object') {
+                distribuicoes = responseData.content || responseData.data || [];
+                totalCount =
+                  responseData.totalElements ||
+                  responseData.total ||
+                  parseInt(response.headers['x-total-count'], 10) ||
+                  distribuicoes.length;
+              }
+
+              setDistribuicaoList(distribuicoes);
+              setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+            })
+            .catch(error => {
+              console.error('Error fetching distributions:', error);
+              setDistribuicaoList([]);
+              setTotalItems(0);
+            })
+            .finally(() => {
+              setLoading(false);
+            });
+        }
+      }, 500);
+
+      setSearchTimeout(timeoutId);
+    },
+    [paginationState, setDistribuicaoList, setTotalItems, setLoading],
+  );
+
+  const handleSearchChange = e => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    debouncedSearch(value);
+  };
+
+  const toggleModal = () => {
+    setModalOpen(!modalOpen);
+    if (!modalOpen) {
+      setSelectedDistribuicao(null);
+      setDistribuicaoDetalhes(null);
+    }
+  };
+
+  const openModal = async distribuicao => {
+    setSelectedDistribuicao(distribuicao);
+    setModalOpen(true);
+    setModalLoading(true);
+
+    try {
+      const response = await axios.get(`/api/distribuicaos/detalhes/${distribuicao.id}`);
+      setDistribuicaoDetalhes(response.data);
+    } catch (error) {
+      console.error('Error fetching distribuicao details:', error);
+      setDistribuicaoDetalhes(null);
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   const getSortIconByFieldName = (fieldName: string) => {
@@ -90,57 +212,53 @@ export const Distribuicao = () => {
   };
 
   return (
-    <div>
-      <h2 id="distribuicao-heading" data-cy="DistribuicaoHeading">
-        <Translate contentKey="leiteVidaApp.distribuicao.home.title">Distribuicaos</Translate>
-        <div className="d-flex justify-content-end">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
-            <FontAwesomeIcon icon="sync" spin={loading} />{' '}
-            <Translate contentKey="leiteVidaApp.distribuicao.home.refreshListLabel">Refresh List</Translate>
-          </Button>
-          <Link to="/distribuicao/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
+    <div className="estoque-list-page">
+      <h2 id="distribuicao-heading" className="estoque-list-title" data-cy="DistribuicaoHeading">
+        Distribuições
+        <div className="d-flex">
+          <div className="me-2" style={{ width: '400px' }}>
+            <Input
+              type="text"
+              name="search"
+              placeholder="Buscar por ID ou nome do paciente"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              style={{
+                height: '48px',
+                borderRadius: '4px',
+                padding: '0.375rem 0.75rem',
+              }}
+            />
+          </div>
+
+          <Link
+            to="/distribuicao/new"
+            className="btn btn-primary jh-create-entity"
+            id="jh-create-entity"
+            data-cy="entityCreateButton"
+            style={{ height: '48px' }}
+          >
             <FontAwesomeIcon icon="plus" />
-            &nbsp;
-            <Translate contentKey="leiteVidaApp.distribuicao.home.createLabel">Create new Distribuicao</Translate>
+            &nbsp; Criar nova distribuição
           </Link>
         </div>
       </h2>
       <div className="table-responsive">
-        {distribuicaoList && distribuicaoList.length > 0 ? (
+        {loading ? (
+          <div className="d-flex justify-content-center">
+            <div className="spinner-border" role="status">
+              <span className="sr-only">Carregando...</span>
+            </div>
+          </div>
+        ) : distribuicaoList && distribuicaoList.length > 0 ? (
           <Table responsive>
             <thead>
               <tr>
-                <th className="hand" onClick={sort('id')}>
-                  <Translate contentKey="leiteVidaApp.distribuicao.id">ID</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('id')} />
-                </th>
-                <th className="hand" onClick={sort('dataDistribuicao')}>
-                  <Translate contentKey="leiteVidaApp.distribuicao.dataDistribuicao">Data Distribuicao</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('dataDistribuicao')} />
-                </th>
-                <th className="hand" onClick={sort('volumeDistribuidoMl')}>
-                  <Translate contentKey="leiteVidaApp.distribuicao.volumeDistribuidoMl">Volume Distribuido Ml</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('volumeDistribuidoMl')} />
-                </th>
-                <th className="hand" onClick={sort('responsavelEntrega')}>
-                  <Translate contentKey="leiteVidaApp.distribuicao.responsavelEntrega">Responsavel Entrega</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('responsavelEntrega')} />
-                </th>
-                <th className="hand" onClick={sort('responsavelRecebimento')}>
-                  <Translate contentKey="leiteVidaApp.distribuicao.responsavelRecebimento">Responsavel Recebimento</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('responsavelRecebimento')} />
-                </th>
-                <th className="hand" onClick={sort('observacoes')}>
-                  <Translate contentKey="leiteVidaApp.distribuicao.observacoes">Observacoes</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('observacoes')} />
-                </th>
-                <th>
-                  <Translate contentKey="leiteVidaApp.distribuicao.estoque">Estoque</Translate> <FontAwesomeIcon icon="sort" />
-                </th>
-                <th>
-                  <Translate contentKey="leiteVidaApp.distribuicao.paciente">Paciente</Translate> <FontAwesomeIcon icon="sort" />
-                </th>
-                <th />
+                <th>ID</th>
+                <th>Data de Distribuição</th>
+                <th>Volume Distribuído</th>
+                <th>Responsável Entrega</th>
+                <th>Observações</th>
               </tr>
             </thead>
             <tbody>
@@ -158,44 +276,17 @@ export const Distribuicao = () => {
                   </td>
                   <td>{distribuicao.volumeDistribuidoMl}</td>
                   <td>{distribuicao.responsavelEntrega}</td>
-                  <td>{distribuicao.responsavelRecebimento}</td>
                   <td>{distribuicao.observacoes}</td>
-                  <td>{distribuicao.estoque ? <Link to={`/estoque/${distribuicao.estoque.id}`}>{distribuicao.estoque.id}</Link> : ''}</td>
-                  <td>
-                    {distribuicao.paciente ? <Link to={`/paciente/${distribuicao.paciente.id}`}>{distribuicao.paciente.id}</Link> : ''}
-                  </td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`/distribuicao/${distribuicao.id}`} color="info" size="sm" data-cy="entityDetailsButton">
-                        <FontAwesomeIcon icon="eye" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.view">View</Translate>
-                        </span>
-                      </Button>
                       <Button
-                        tag={Link}
-                        to={`/distribuicao/${distribuicao.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
-                        color="primary"
+                        color="info"
+                        style={{ background: '#7ad27d', border: 'none' }}
                         size="sm"
-                        data-cy="entityEditButton"
+                        onClick={() => openModal(distribuicao)}
+                        title="Visualizar detalhes"
                       >
-                        <FontAwesomeIcon icon="pencil-alt" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.edit">Edit</Translate>
-                        </span>
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          (window.location.href = `/distribuicao/${distribuicao.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`)
-                        }
-                        color="danger"
-                        size="sm"
-                        data-cy="entityDeleteButton"
-                      >
-                        <FontAwesomeIcon icon="trash" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.delete">Delete</Translate>
-                        </span>
+                        <FontAwesomeIcon icon={faEye} />
                       </Button>
                     </div>
                   </td>
@@ -204,13 +295,124 @@ export const Distribuicao = () => {
             </tbody>
           </Table>
         ) : (
-          !loading && (
-            <div className="alert alert-warning">
-              <Translate contentKey="leiteVidaApp.distribuicao.home.notFound">No Distribuicaos found</Translate>
-            </div>
-          )
+          <div className="alert alert-warning">
+            <Translate contentKey="leiteVidaApp.distribuicao.home.notFound">No Distribuicaos found</Translate>
+          </div>
         )}
       </div>
+
+      {/* Modal */}
+      <Modal isOpen={modalOpen} toggle={toggleModal} size="lg">
+        <ModalHeader toggle={toggleModal}>Detalhes da Distribuição {selectedDistribuicao?.id}</ModalHeader>
+        <ModalBody>
+          {modalLoading ? (
+            <div className="d-flex justify-content-center">
+              <div className="spinner-border" role="status">
+                <span className="sr-only">Carregando detalhes...</span>
+              </div>
+            </div>
+          ) : distribuicaoDetalhes ? (
+            <div className="distribuicao-detalhes">
+              {/* Seção de informações do paciente */}
+              <div className="card mb-4">
+                <div className="card-header bg-light">
+                  <h5 className="mb-0">Informações do Paciente</h5>
+                </div>
+                <div className="card-body">
+                  <Row>
+                    <Col md={12}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Nome do Paciente</label>
+                        <span className="fw-bold">{distribuicaoDetalhes.nomePaciente}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Telefone Responsável</label>
+                        <span className="fw-bold">{distribuicaoDetalhes.telefoneResponsavel}</span>
+                      </div>
+                    </Col>
+                    <Col md={6}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">CPF Responsável</label>
+                        <span className="fw-bold">{distribuicaoDetalhes.cpfResponsavel}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col md={12}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Parentesco do Responsável</label>
+                        <span className="fw-bold">{distribuicaoDetalhes.parentescoResponsavel}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+
+              {/* Seção de informações do estoque */}
+              <div className="card mb-4">
+                <div className="card-header bg-light">
+                  <h5 className="mb-0">Informações do Lote</h5>
+                </div>
+                <div className="card-body">
+                  <Row>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">ID do Lote</label>
+                        <span className="fw-bold">{distribuicaoDetalhes.estoqueId}</span>
+                      </div>
+                    </Col>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Tipo de Leite</label>
+                        <span className="fw-bold">
+                          <Translate contentKey={`leiteVidaApp.TipoLeite.${distribuicaoDetalhes.tipoLeite}`} />
+                        </span>
+                      </div>
+                    </Col>
+                    <Col md={4}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Classificação</label>
+                        <span className="fw-bold">
+                          <Translate contentKey={`leiteVidaApp.ClassificacaoLeite.${distribuicaoDetalhes.classificacao}`} />
+                        </span>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+
+              {/* Seção de informações da doadora */}
+              <div className="card">
+                <div className="card-header bg-light">
+                  <h5 className="mb-0">Informações da Doadora</h5>
+                </div>
+                <div className="card-body">
+                  <Row>
+                    <Col md={12}>
+                      <div className="mb-3">
+                        <label className="text-muted d-block">Nome da Doadora</label>
+                        <span className="fw-bold">{distribuicaoDetalhes.nomeDoadora}</span>
+                      </div>
+                    </Col>
+                  </Row>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="alert alert-warning">Não foi possível carregar os detalhes da distribuição.</div>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={toggleModal}>
+            Fechar
+          </Button>
+        </ModalFooter>
+      </Modal>
+
       {totalItems ? (
         <div className={distribuicaoList && distribuicaoList.length > 0 ? '' : 'd-none'}>
           <div className="justify-content-center d-flex">

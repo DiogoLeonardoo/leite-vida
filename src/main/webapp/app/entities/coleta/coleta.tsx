@@ -15,7 +15,7 @@ import FrascoLabModal from './frascolab-modal';
 import ProcessingModal from './processing-modal';
 import './coleta.scss';
 
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 4;
 
 export const Coleta = () => {
   const pageLocation = useLocation();

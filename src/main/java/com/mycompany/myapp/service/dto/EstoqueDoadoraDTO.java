@@ -10,5 +10,9 @@ public record EstoqueDoadoraDTO(
     Double volumeDisponivelMl,
     String nomeDoadora,
     String cpfDoadora,
-    String telefoneDoadora
+    String telefoneDoadora,
+    String tecnicoResponsavel,
+    LocalDate dataProcessamento,
+    Double valorAcidezDornic,
+    Double valorCaloricoKcal
 ) {}
