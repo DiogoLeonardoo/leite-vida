@@ -1,6 +1,8 @@
 package com.mycompany.myapp.web.rest;
 
+import com.itextpdf.text.DocumentException;
 import com.mycompany.myapp.repository.ProcessamentoRepository;
+import com.mycompany.myapp.service.ProcessamentoPdfService;
 import com.mycompany.myapp.service.ProcessamentoQueryService;
 import com.mycompany.myapp.service.ProcessamentoService;
 import com.mycompany.myapp.service.criteria.ProcessamentoCriteria;
@@ -8,8 +10,10 @@ import com.mycompany.myapp.service.dto.ProcessamentoDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,7 +22,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -46,14 +52,18 @@ public class ProcessamentoResource {
 
     private final ProcessamentoQueryService processamentoQueryService;
 
+    private final ProcessamentoPdfService processamentoPdfService;
+
     public ProcessamentoResource(
         ProcessamentoService processamentoService,
         ProcessamentoRepository processamentoRepository,
-        ProcessamentoQueryService processamentoQueryService
+        ProcessamentoQueryService processamentoQueryService,
+        ProcessamentoPdfService processamentoPdfService
     ) {
         this.processamentoService = processamentoService;
         this.processamentoRepository = processamentoRepository;
         this.processamentoQueryService = processamentoQueryService;
+        this.processamentoPdfService = processamentoPdfService;
     }
 
     /**
@@ -222,5 +232,20 @@ public class ProcessamentoResource {
         return ResponseEntity.created(new URI("/api/processamentos/" + processamentoDTO.getId()))
             .headers(HeaderUtil.createEntityCreationAlert(applicationName, true, ENTITY_NAME, processamentoDTO.getId().toString()))
             .body(processamentoDTO);
+    }
+
+    @GetMapping("/processamento-periodo/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioPdf(
+        @RequestParam("dataInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+        @RequestParam("dataFim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) throws DocumentException, IOException {
+        byte[] pdfBytes = processamentoPdfService.gerarRelatorioPdf(dataInicio, dataFim);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "relatorio-processamento.pdf");
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok().headers(headers).body(pdfBytes);
     }
 }
