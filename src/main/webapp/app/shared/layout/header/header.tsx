@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import { useAppDispatch } from 'app/config/store';
 import { setLocale } from 'app/shared/reducers/locale';
 import { AccountMenu, AdminMenu, EntitiesMenu, LocaleMenu } from '../menus';
-import { Brand, Coleta, Distribuicao, Doadora, Estoque, Pacientes, Processamentos, Users } from './header-components';
+import { Brand, Coleta, Distribuicao, Doadora, Estoque, Pacientes, Processamentos, Relatorios, Users } from './header-components';
 import { hasAnyAuthority } from 'app/shared/auth/private-route';
 import { useAppSelector } from 'app/config/store';
 
@@ -27,7 +27,8 @@ const Header = (props: IHeaderProps) => {
   const location = useLocation();
   const account = useAppSelector(state => state.authentication.account);
   const isLab = hasAnyAuthority(account.authorities, ['ROLE_LAB']);
-  const isEnf = hasAnyAuthority(account.authorities, ['ROLE_LAB']);
+  const isEnf = hasAnyAuthority(account.authorities, ['ROLE_ENF']);
+  const isAdmin = hasAnyAuthority(account.authorities, ['ROLE_ADMIN']);
 
   const dispatch = useAppDispatch();
 
@@ -60,7 +61,7 @@ const Header = (props: IHeaderProps) => {
                   {props.isAuthenticated && <Coleta />}
                   {!isLab && <Distribuicao />}
                   {!isLab && <Estoque />}
-                  {isLab && <Processamentos />}
+                  {isAdmin && <Relatorios />}
                   {props.isAdmin && <Users />}
                   {/* {props.isAdmin && <AdminMenu showOpenAPI={props.isOpenAPIEnabled} />} */}
                 </>

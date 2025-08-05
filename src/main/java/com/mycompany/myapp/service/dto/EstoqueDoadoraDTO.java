@@ -8,6 +8,7 @@ public record EstoqueDoadoraDTO(
     String tipoLeite,
     String classificacao,
     Double volumeDisponivelMl,
+    Double temperaturaArmazenamento,
     String nomeDoadora,
     String cpfDoadora,
     String telefoneDoadora,

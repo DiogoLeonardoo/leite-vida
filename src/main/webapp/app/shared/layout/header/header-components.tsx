@@ -90,3 +90,12 @@ export const Processamentos = () => (
     </NavLink>
   </NavItem>
 );
+
+export const Relatorios = () => (
+  <NavItem>
+    <NavLink tag={Link} to="/relatorios" className="d-flex align-items-center">
+      <img src="content/images/relatorios.svg" style={{ width: '20px', marginRight: '10px' }} />
+      <span>Relatórios</span>
+    </NavLink>
+  </NavItem>
+);
