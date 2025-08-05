@@ -1,10 +1,13 @@
 package com.mycompany.myapp.web.rest;
 
 import com.mycompany.myapp.domain.Doadora;
+import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.repository.DoadoraRepository;
+import com.mycompany.myapp.service.ColetaDoadoraPdfService;
 import com.mycompany.myapp.service.DoadoraQueryService;
 import com.mycompany.myapp.service.DoadoraService;
 import com.mycompany.myapp.service.criteria.DoadoraCriteria;
+import com.mycompany.myapp.service.dto.DoadoraColetasProjection;
 import com.mycompany.myapp.service.dto.DoadoraDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.persistence.EntityNotFoundException;
@@ -12,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -48,10 +54,21 @@ public class DoadoraResource {
 
     private final DoadoraQueryService doadoraQueryService;
 
-    public DoadoraResource(DoadoraService doadoraService, DoadoraRepository doadoraRepository, DoadoraQueryService doadoraQueryService) {
+    private final ColetaRepository coletaRepository;
+    private final ColetaDoadoraPdfService coletaDoadoraPdfService;
+
+    public DoadoraResource(
+        DoadoraService doadoraService,
+        DoadoraRepository doadoraRepository,
+        DoadoraQueryService doadoraQueryService,
+        ColetaRepository coletaRepository,
+        ColetaDoadoraPdfService coletaDoadoraPdfService
+    ) {
         this.doadoraService = doadoraService;
         this.doadoraRepository = doadoraRepository;
         this.doadoraQueryService = doadoraQueryService;
+        this.coletaRepository = coletaRepository;
+        this.coletaDoadoraPdfService = coletaDoadoraPdfService;
     }
 
     /**
@@ -236,5 +253,52 @@ public class DoadoraResource {
         return doadoraRepository
             .findByCpf(cpf)
             .orElseThrow(() -> new EntityNotFoundException("Doadora com CPF " + cpf + " não encontrada"));
+    }
+
+    @GetMapping("/pdf/doadora/{doadoraId}")
+    public ResponseEntity<byte[]> gerarPdfColetasPorDoadora(
+        @PathVariable Long doadoraId,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) {
+        try {
+            // Verifica se a doadora existe
+            DoadoraDTO doadora = doadoraService
+                .findOne(doadoraId)
+                .orElseThrow(() -> new EntityNotFoundException("Doadora não encontrada com ID: " + doadoraId));
+
+            // Define datas padrão caso sejam nulas
+            if (dataInicio == null) {
+                dataInicio = LocalDate.of(1900, 1, 1); // ou o mínimo aceitável no sistema
+            }
+            if (dataFim == null) {
+                dataFim = LocalDate.of(2100, 12, 31); // ou o máximo aceitável no sistema
+            }
+
+            List<DoadoraColetasProjection> coletas = doadoraRepository.buscarPorDoadoraEPeriodo(doadoraId, dataInicio, dataFim);
+
+            String nomeDoadora = doadora.getNome();
+            byte[] pdf = coletaDoadoraPdfService.gerarRelatorioPorDoadora(coletas, nomeDoadora, dataInicio, dataFim);
+
+            // Monta nome do arquivo PDF
+            String nomeArquivo =
+                "relatorio-coletas-" +
+                nomeDoadora
+                    .replaceAll("\\s+", "-")
+                    .replaceAll("[^a-zA-Z0-9\\-]", "") // remove caracteres inválidos
+                    .toLowerCase() +
+                ".pdf";
+
+            return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nomeArquivo + "\"")
+                .body(pdf);
+        } catch (EntityNotFoundException e) {
+            LOG.error("Doadora não encontrada: {}", e.getMessage());
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            LOG.error("Erro ao gerar PDF: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
