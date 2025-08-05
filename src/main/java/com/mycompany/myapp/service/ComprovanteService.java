@@ -89,11 +89,9 @@ public class ComprovanteService {
 
         document.add(coletaTable);
 
-        // Dados da Doadora
         DoadoraDTO d = coleta.getDoadora();
         document.add(createSectionTitle("DADOS DA DOADORA", sectionFont));
 
-        // Tabela principal da doadora (3 colunas para melhor aproveitamento do espaço)
         PdfPTable doadoraTable = new PdfPTable(3);
         doadoraTable.setWidthPercentage(100);
         doadoraTable.setWidths(new float[] { 1f, 1f, 1f });
@@ -131,7 +129,6 @@ public class ComprovanteService {
 
         document.add(doadoraTable);
 
-        // Endereço
         document.add(createSectionTitle("ENDEREÇO", sectionFont));
         PdfPTable enderecoTable = new PdfPTable(4);
         enderecoTable.setWidthPercentage(100);
@@ -152,7 +149,6 @@ public class ComprovanteService {
 
         document.add(enderecoTable);
 
-        // Exames em tabela compacta
         document.add(createSectionTitle("EXAMES", sectionFont));
         PdfPTable examesTable = new PdfPTable(5);
         examesTable.setWidthPercentage(100);

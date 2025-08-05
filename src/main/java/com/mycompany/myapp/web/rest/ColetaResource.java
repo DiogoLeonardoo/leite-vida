@@ -6,6 +6,7 @@ import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.service.ColetaQueryService;
 import com.mycompany.myapp.service.ColetaService;
 import com.mycompany.myapp.service.ComprovanteService;
+import com.mycompany.myapp.service.RelatorioColetaPeriodoService;
 import com.mycompany.myapp.service.criteria.ColetaCriteria;
 import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.service.dto.ColetaDoadoraDTO;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -23,7 +25,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -54,16 +59,20 @@ public class ColetaResource {
 
     private final ComprovanteService comprovanteService;
 
+    private final RelatorioColetaPeriodoService relatorioColetaService;
+
     public ColetaResource(
         ColetaService coletaService,
         ColetaRepository coletaRepository,
         ColetaQueryService coletaQueryService,
-        ComprovanteService comprovanteService
+        ComprovanteService comprovanteService,
+        RelatorioColetaPeriodoService relatorioColetaService
     ) {
         this.coletaService = coletaService;
         this.coletaRepository = coletaRepository;
         this.coletaQueryService = coletaQueryService;
         this.comprovanteService = comprovanteService;
+        this.relatorioColetaService = relatorioColetaService;
     }
 
     /**
@@ -288,5 +297,26 @@ public class ColetaResource {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(dto);
+    }
+
+    @GetMapping("/relatorios-periodo/pdf")
+    public ResponseEntity<byte[]> gerarRelatorioColetasPDF(
+        @RequestParam("dataInicio") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+        @RequestParam("dataFim") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) {
+        try {
+            byte[] pdfBytes = relatorioColetaService.gerarRelatorioColetas(dataInicio, dataFim);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDisposition(
+                ContentDisposition.builder("attachment").filename("relatorio_coletas_" + dataInicio + "_" + dataFim + ".pdf").build()
+            );
+
+            return ResponseEntity.ok().headers(headers).body(pdfBytes);
+        } catch (Exception e) {
+            LOG.error("Erro ao gerar relatório de coletas", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

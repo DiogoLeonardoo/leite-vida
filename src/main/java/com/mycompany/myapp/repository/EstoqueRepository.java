@@ -5,6 +5,7 @@ import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
 import com.mycompany.myapp.domain.enumeration.StatusLote;
 import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.service.dto.EstoqueDoadoraDTO;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,4 +67,20 @@ public interface EstoqueRepository extends JpaRepository<Estoque, Long>, JpaSpec
         nativeQuery = true
     )
     List<Object[]> buscarDoadoraEstoque(@Param("estoqueId") Long estoqueId);
+
+    @Query(
+        value = "SELECT e FROM Estoque e WHERE " +
+        "(:tipoLeite IS NULL OR e.tipoLeite = :tipoLeite) AND " +
+        "(:statusLote IS NULL OR e.statusLote = :statusLote) AND " +
+        "(:classificacao IS NULL OR e.classificacao = :classificacao) AND " +
+        "((:dataInicio IS NULL AND :dataFim IS NULL) OR " +
+        " (:dataInicio IS NOT NULL AND :dataFim IS NOT NULL AND e.dataProducao BETWEEN :dataInicio AND :dataFim))"
+    )
+    List<Estoque> buscarComFiltros(
+        @Param("tipoLeite") TipoLeite tipoLeite,
+        @Param("statusLote") StatusLote statusLote,
+        @Param("classificacao") ClassificacaoLeite classificacao,
+        @Param("dataInicio") LocalDate dataInicio,
+        @Param("dataFim") LocalDate dataFim
+    );
 }

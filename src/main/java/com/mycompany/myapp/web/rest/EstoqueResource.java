@@ -1,11 +1,13 @@
 package com.mycompany.myapp.web.rest;
 
+import com.itextpdf.text.DocumentException;
 import com.mycompany.myapp.domain.Estoque;
 import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
 import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.domain.enumeration.StatusLote;
 import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.EstoqueRepository;
+import com.mycompany.myapp.service.EstoquePdfService;
 import com.mycompany.myapp.service.EstoqueQueryService;
 import com.mycompany.myapp.service.EstoqueService;
 import com.mycompany.myapp.service.criteria.EstoqueCriteria;
@@ -17,6 +19,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,7 +30,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -55,10 +60,18 @@ public class EstoqueResource {
 
     private final EstoqueQueryService estoqueQueryService;
 
-    public EstoqueResource(EstoqueService estoqueService, EstoqueRepository estoqueRepository, EstoqueQueryService estoqueQueryService) {
+    private final EstoquePdfService estoquePdfService;
+
+    public EstoqueResource(
+        EstoqueService estoqueService,
+        EstoqueRepository estoqueRepository,
+        EstoqueQueryService estoqueQueryService,
+        EstoquePdfService estoquePdfService
+    ) {
         this.estoqueService = estoqueService;
         this.estoqueRepository = estoqueRepository;
         this.estoqueQueryService = estoqueQueryService;
+        this.estoquePdfService = estoquePdfService;
     }
 
     /**
@@ -292,5 +305,72 @@ public class EstoqueResource {
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
             .body(result);
+    }
+
+    @GetMapping("/relatorio/estoque/pdf")
+    public ResponseEntity<byte[]> gerarPdfEstoque(
+        @RequestParam(required = false) String tipoLeite,
+        @RequestParam(required = false) String statusLote,
+        @RequestParam(required = false) String classificacao,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) throws DocumentException {
+        try {
+            LOG.debug(
+                "Gerando relatório PDF com parâmetros: tipoLeite={}, statusLote={}, classificacao={}, dataInicio={}, dataFim={}",
+                tipoLeite,
+                statusLote,
+                classificacao,
+                dataInicio,
+                dataFim
+            );
+
+            TipoLeite tipoLeiteEnum = null;
+            if (tipoLeite != null && !tipoLeite.isEmpty()) {
+                try {
+                    tipoLeiteEnum = TipoLeite.valueOf(tipoLeite);
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("TipoLeite inválido: {}", tipoLeite);
+                }
+            }
+
+            StatusLote statusLoteEnum = null;
+            if (statusLote != null && !statusLote.isEmpty()) {
+                try {
+                    statusLoteEnum = StatusLote.valueOf(statusLote);
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("StatusLote inválido: {}", statusLote);
+                }
+            }
+
+            ClassificacaoLeite classificacaoEnum = null;
+            if (classificacao != null && !classificacao.isEmpty()) {
+                try {
+                    classificacaoEnum = ClassificacaoLeite.valueOf(classificacao);
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("Classificacao inválida: {}", classificacao);
+                }
+            }
+
+            List<Estoque> estoques = estoqueRepository.buscarComFiltros(
+                tipoLeiteEnum,
+                statusLoteEnum,
+                classificacaoEnum,
+                dataInicio,
+                dataFim
+            );
+
+            LOG.debug("Encontrados {} registros para o relatório", estoques.size());
+
+            byte[] pdfBytes = estoquePdfService.gerarRelatorioEstoque(estoques);
+
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_estoque.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+        } catch (Exception e) {
+            LOG.error("Erro ao gerar relatório de estoque: ", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }
