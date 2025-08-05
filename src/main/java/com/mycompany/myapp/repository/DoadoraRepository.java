@@ -47,8 +47,8 @@ public interface DoadoraRepository extends JpaRepository<Doadora, Long>, JpaSpec
             FROM Coleta c
             JOIN c.doadora d
             WHERE d.id = :doadoraId
-              AND (:dataInicio IS NULL OR c.dataColeta >= :dataInicio)
-              AND (:dataFim IS NULL OR c.dataColeta <= :dataFim)
+              AND (CAST(:dataInicio AS LocalDate) IS NULL OR c.dataColeta >= :dataInicio)
+              AND (CAST(:dataFim AS LocalDate) IS NULL OR c.dataColeta <= :dataFim)
             ORDER BY c.dataColeta DESC
         """
     )

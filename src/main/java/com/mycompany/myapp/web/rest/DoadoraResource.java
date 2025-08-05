@@ -267,18 +267,25 @@ public class DoadoraResource {
                 .findOne(doadoraId)
                 .orElseThrow(() -> new EntityNotFoundException("Doadora não encontrada com ID: " + doadoraId));
 
-            // Define datas padrão caso sejam nulas
-            if (dataInicio == null) {
-                dataInicio = LocalDate.of(1900, 1, 1); // ou o mínimo aceitável no sistema
+            // Define datas padrão caso sejam nulas - usando valores explícitos para evitar problemas com SQL
+            LocalDate dataInicioEfetiva = dataInicio;
+            LocalDate dataFimEfetiva = dataFim;
+
+            if (dataInicioEfetiva == null) {
+                dataInicioEfetiva = LocalDate.of(2000, 1, 1);
             }
-            if (dataFim == null) {
-                dataFim = LocalDate.of(2100, 12, 31); // ou o máximo aceitável no sistema
+            if (dataFimEfetiva == null) {
+                dataFimEfetiva = LocalDate.now().plusYears(1);
             }
 
-            List<DoadoraColetasProjection> coletas = doadoraRepository.buscarPorDoadoraEPeriodo(doadoraId, dataInicio, dataFim);
+            List<DoadoraColetasProjection> coletas = doadoraRepository.buscarPorDoadoraEPeriodo(
+                doadoraId,
+                dataInicioEfetiva,
+                dataFimEfetiva
+            );
 
             String nomeDoadora = doadora.getNome();
-            byte[] pdf = coletaDoadoraPdfService.gerarRelatorioPorDoadora(coletas, nomeDoadora, dataInicio, dataFim);
+            byte[] pdf = coletaDoadoraPdfService.gerarRelatorioPorDoadora(coletas, nomeDoadora, dataInicioEfetiva, dataFimEfetiva);
 
             // Monta nome do arquivo PDF
             String nomeArquivo =

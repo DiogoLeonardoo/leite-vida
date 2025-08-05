@@ -7,6 +7,7 @@ import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
 import com.mycompany.myapp.domain.enumeration.ResultadoAnalise;
 import com.mycompany.myapp.domain.enumeration.StatusColeta;
 import com.mycompany.myapp.domain.enumeration.StatusLote;
+import com.mycompany.myapp.domain.enumeration.StatusProcessamento;
 import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.ColetaRepository;
 import com.mycompany.myapp.repository.EstoqueRepository;
@@ -150,20 +151,49 @@ public class ProcessamentoService {
         processamento.setTecnicoResponsavel(processamentoDTO.getTecnicoResponsavel());
         processamento.setValorAcidezDornic(processamentoDTO.getValorAcidezDornic());
         processamento.setValorCaloricoKcal(processamentoDTO.getValorCaloricoKcal());
-        processamento.setResultadoAnalise(processamentoDTO.getResultadoAnalise());
-        processamento.setStatusProcessamento(processamentoDTO.getStatusProcessamento());
+
+        // Handle empty strings for enum fields safely
+        if (processamentoDTO.getResultadoAnalise() != null) {
+            processamento.setResultadoAnalise(processamentoDTO.getResultadoAnalise());
+        }
+
+        // Se o resultado for REPROVADO, garantir que o status seja REJEITADO
+        if (ResultadoAnalise.REPROVADO.equals(processamentoDTO.getResultadoAnalise())) {
+            coleta.setStatusColeta(StatusColeta.CANCELADA);
+            processamento.setStatusProcessamento(StatusProcessamento.REJEITADO);
+        } else {
+            // Ensure statusProcessamento is always set to prevent NotNull constraint violation
+            if (processamentoDTO.getStatusProcessamento() != null) {
+                processamento.setStatusProcessamento(processamentoDTO.getStatusProcessamento());
+            } else {
+                // Default status if none provided
+                processamento.setStatusProcessamento(StatusProcessamento.REJEITADO);
+            }
+        }
+
         processamento.setColeta(coleta);
 
         Estoque estoque = null;
         if (ResultadoAnalise.APROVADO.equals(processamentoDTO.getResultadoAnalise())) {
+            // Validar campos obrigatórios para aprovação
+            if (
+                processamentoDTO.getTipoLeite() == null ||
+                processamentoDTO.getClassificacaoLeite() == null ||
+                processamentoDTO.getLocalArmazenamento() == null ||
+                processamentoDTO.getLocalArmazenamento().isEmpty() ||
+                processamentoDTO.getTemperaturaArmazenamento() == null
+            ) {
+                throw new IllegalArgumentException("Campos de armazenamento são obrigatórios para processamentos aprovados");
+            }
+
             estoque = criarEstoqueFromProcessamento(processamento, coleta, processamentoDTO);
             estoque = estoqueRepository.save(estoque);
-
             processamento.setEstoque(estoque);
+        } else {
+            LOG.info("Processamento reprovado/rejeitado - não será criado estoque");
         }
 
         processamento = processamentoRepository.save(processamento);
-
         return processamentoMapper.toDto(processamento);
     }
 
@@ -172,8 +202,12 @@ public class ProcessamentoService {
 
         estoque.setDataProducao(processamento.getDataProcessamento());
         estoque.setDataValidade(calcularDataValidade(processamento.getDataProcessamento()));
+
+        // Set TipoLeite and ClassificacaoLeite directly
+        // No need for valueOf conversion if they're already enum types in ProcessamentoDTO
         estoque.setTipoLeite(processamentoDTO.getTipoLeite());
         estoque.setClassificacao(processamentoDTO.getClassificacaoLeite());
+
         estoque.setVolumeTotalMl(coleta.getVolumeMl());
         estoque.setVolumeDisponivelMl(coleta.getVolumeMl());
         estoque.setLocalArmazenamento(processamentoDTO.getLocalArmazenamento());
