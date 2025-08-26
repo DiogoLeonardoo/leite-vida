@@ -298,33 +298,49 @@ export const PacienteUpdate = () => {
           </Col>
           <Col md={4}>
             <div className="form-group">
-              <label htmlFor="paciente-pesoNascimento">
-                <Translate contentKey="leiteVidaApp.paciente.pesoNascimento">Peso Nascimento (g)</Translate>
-              </label>
+              <label htmlFor="paciente-pesoNascimento">Peso Nascimento (g)</label>
               <ValidatedField
                 id="paciente-pesoNascimento"
                 name="pesoNascimento"
                 data-cy="pesoNascimento"
                 type="number"
                 className="form-control"
-                onChange={e => handleInputChange('pesoNascimento', e.target.value)}
+                min={500}
+                max={6000}
                 value={formData.pesoNascimento}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value.length <= 4) {
+                    handleInputChange('pesoNascimento', value);
+                  }
+                }}
+                validate={{
+                  required: { value: true, message: 'Peso de nascimento é obrigatório' },
+                  min: { value: 500, message: 'Valor mínimo é 500 g' },
+                  max: { value: 6000, message: 'Valor máximo é 6000 g' },
+                }}
               />
             </div>
           </Col>
+
           <Col md={4}>
             <div className="form-group">
-              <label htmlFor="paciente-idadeGestacional">
-                <Translate contentKey="leiteVidaApp.paciente.idadeGestacional">Idade Gestacional (semanas)</Translate>
-              </label>
+              <label htmlFor="paciente-idadeGestacional">Idade Gestacional (semanas)</label>
               <ValidatedField
                 id="paciente-idadeGestacional"
                 name="idadeGestacional"
                 data-cy="idadeGestacional"
                 type="number"
                 className="form-control"
-                onChange={e => handleInputChange('idadeGestacional', e.target.value)}
+                min={22}
+                max={42}
                 value={formData.idadeGestacional}
+                onChange={e => handleInputChange('idadeGestacional', e.target.value)}
+                validate={{
+                  required: { value: true, message: 'Idade gestacional é obrigatória' },
+                  min: { value: 22, message: 'Mínimo de 22 semanas' },
+                  max: { value: 42, message: 'Máximo de 42 semanas' },
+                }}
               />
             </div>
           </Col>
@@ -396,14 +412,26 @@ export const PacienteUpdate = () => {
                 id="paciente-parentescoResponsavel"
                 name="parentescoResponsavel"
                 data-cy="parentescoResponsavel"
-                type="text"
+                type="select"
                 className="form-control"
+                value={formData.parentescoResponsavel}
+                onChange={e => handleInputChange('parentescoResponsavel', e.target.value)}
                 validate={{
                   required: { value: true, message: translate('entity.validation.required') },
                 }}
-                onChange={e => handleInputChange('parentescoResponsavel', e.target.value)}
-                value={formData.parentescoResponsavel}
-              />
+              >
+                <option value="" disabled>
+                  Selecione...
+                </option>
+                <option value="PAI">Pai</option>
+                <option value="MAE">Mãe</option>
+                <option value="AVO">Avô / Avó</option>
+                <option value="TIO_TIA">Tio / Tia</option>
+                <option value="IRMAO_IRMA">Irmão / Irmã</option>
+                <option value="PADRASTO_MADRASTA">Padrasto / Madrasta</option>
+                <option value="TUTOR">Tutor / Guardião legal</option>
+                <option value="OUTRO">Outro</option>
+              </ValidatedField>
             </div>
           </Col>
         </Row>
