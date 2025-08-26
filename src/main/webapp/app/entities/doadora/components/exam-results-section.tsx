@@ -20,6 +20,12 @@ interface ExamResultsSectionProps {
   handleInputChange: (field: string, value: string | boolean) => void;
 }
 
+const resultadoExameDisplay: Record<string, string> = {
+  POSITIVO: 'Positivo',
+  NEGATIVO: 'Negativo',
+  NAO_INFORMADO: 'Não Informado',
+};
+
 export const ExamResultsSection: React.FC<ExamResultsSectionProps> = ({ formData, formErrors, handleInputChange }) => {
   const resultadoExameValues = Object.keys(ResultadoExame);
 
@@ -50,7 +56,7 @@ export const ExamResultsSection: React.FC<ExamResultsSectionProps> = ({ formData
               <option value="">Selecione...</option>
               {resultadoExameValues.map(resultado => (
                 <option value={resultado} key={resultado}>
-                  {translate(`leiteVidaApp.ResultadoExame.${resultado}`)}
+                  {resultadoExameDisplay[resultado] || resultado}
                 </option>
               ))}
             </ValidatedField>
@@ -72,7 +78,7 @@ export const ExamResultsSection: React.FC<ExamResultsSectionProps> = ({ formData
               <option value="">Selecione...</option>
               {resultadoExameValues.map(resultado => (
                 <option value={resultado} key={resultado}>
-                  {translate(`leiteVidaApp.ResultadoExame.${resultado}`)}
+                  {resultadoExameDisplay[resultado] || resultado}
                 </option>
               ))}
             </ValidatedField>
@@ -96,7 +102,7 @@ export const ExamResultsSection: React.FC<ExamResultsSectionProps> = ({ formData
               <option value="">Selecione...</option>
               {resultadoExameValues.map(resultado => (
                 <option value={resultado} key={resultado}>
-                  {translate(`leiteVidaApp.ResultadoExame.${resultado}`)}
+                  {resultadoExameDisplay[resultado] || resultado}
                 </option>
               ))}
             </ValidatedField>
@@ -118,7 +124,7 @@ export const ExamResultsSection: React.FC<ExamResultsSectionProps> = ({ formData
               <option value="">Selecione...</option>
               {resultadoExameValues.map(resultado => (
                 <option value={resultado} key={resultado}>
-                  {translate(`leiteVidaApp.ResultadoExame.${resultado}`)}
+                  {resultadoExameDisplay[resultado] || resultado}
                 </option>
               ))}
             </ValidatedField>

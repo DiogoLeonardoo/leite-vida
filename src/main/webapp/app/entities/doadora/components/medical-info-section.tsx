@@ -18,6 +18,18 @@ interface MedicalInfoSectionProps {
   handleInputChange: (field: string, value: string | boolean) => void;
 }
 
+const localPreNatalDisplay: Record<string, string> = {
+  REDE_PUBLICA: 'Rede Pública',
+  REDE_PRIVADA: 'Rede Privada',
+  NAO_REALIZADO: 'Não Informado',
+};
+
+const tipoDoadoraDisplay: Record<string, string> = {
+  DOMICILIAR: 'Domiciliar',
+  EXCLUSIVA: 'Exclusiva',
+  EVENTUAL: 'Eventual',
+};
+
 export const MedicalInfoSection: React.FC<MedicalInfoSectionProps> = ({ formData, formErrors, handleInputChange }) => {
   const tipoDoadoraValues = Object.keys(TipoDoadora);
   const localPreNatalValues = Object.keys(LocalPreNatal);
@@ -49,7 +61,7 @@ export const MedicalInfoSection: React.FC<MedicalInfoSectionProps> = ({ formData
               <option value="">Selecione...</option>
               {tipoDoadoraValues.map(tipoDoadora => (
                 <option value={tipoDoadora} key={tipoDoadora}>
-                  {translate(`leiteVidaApp.TipoDoadora.${tipoDoadora}`)}
+                  {tipoDoadoraDisplay[tipoDoadora] || tipoDoadora}
                 </option>
               ))}
             </ValidatedField>
@@ -71,7 +83,7 @@ export const MedicalInfoSection: React.FC<MedicalInfoSectionProps> = ({ formData
               <option value="">Selecione...</option>
               {localPreNatalValues.map(localPreNatal => (
                 <option value={localPreNatal} key={localPreNatal}>
-                  {translate(`leiteVidaApp.LocalPreNatal.${localPreNatal}`)}
+                  {localPreNatalDisplay[localPreNatal] || localPreNatal}
                 </option>
               ))}
             </ValidatedField>

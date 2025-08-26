@@ -71,6 +71,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
               name="estado"
               data-cy="estado"
               type="text"
+              disabled
               value={formData.estado}
               onChange={e => handleInputChange('estado', e.target.value)}
               validate={{
@@ -85,6 +86,7 @@ export const AddressSection: React.FC<AddressSectionProps> = ({
               id="doadora-cidade"
               name="cidade"
               data-cy="cidade"
+              disabled
               type="text"
               value={formData.cidade}
               onChange={e => handleInputChange('cidade', e.target.value)}
