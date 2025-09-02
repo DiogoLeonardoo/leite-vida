@@ -115,13 +115,13 @@ O sistema oferece diferentes perfis de acesso:
 
 ### Tela de Login
 
-<img src="./src/main/webapp/content/images/screenshots/login-screen.png" alt="Tela de Login" width="600">
+<img src="./src/main/webapp/content/images/homeleite-vida.png" alt="Tela de Login" width="600">
 
 A tela de login apresenta uma interface limpa e intuitiva com o logotipo do LeiteVida. Os usuários devem inserir seu CPF e senha para acessar o sistema.
 
-### Dashboard
+### Home Page
 
-<img src="./src/main/webapp/content/images/screenshots/dashboard.png" alt="Dashboard" width="800">
+<img src="./src/main/webapp/content/images/homepage-leitevida.png" alt="Dashboard" width="800">
 
 O dashboard principal mostra estatísticas importantes:
 
@@ -133,13 +133,13 @@ Também apresenta acesso rápido às principais funcionalidades através de bot�
 
 ### Listagem de Doadoras
 
-<img src="./src/main/webapp/content/images/screenshots/doadoras-list.png" alt="Lista de Doadoras" width="800">
+<img src="./src/main/webapp/content/images/doadora-leitevida.png" alt="Lista de Doadoras" width="800">
 
 Interface para visualização e gerenciamento de doadoras cadastradas, com opções para filtrar, editar e adicionar novas doadoras.
 
 ### Relatórios
 
-<img src="./src/main/webapp/content/images/screenshots/relatorio-coletas.png" alt="Relatório de Coletas" width="800">
+<img src="./src/main/webapp/content/images/relatorios-leitevida.png" alt="Relatório de Coletas" width="800">
 
 O sistema permite gerar relatórios detalhados sobre coletas, processamento e distribuição, com filtros por período e possibilidade de exportação.
 
