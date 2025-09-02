@@ -1,7 +1,5 @@
 # LeiteVida - Sistema de Gerenciamento para Banco de Leite Humano
 
-<img src="./src/main/webapp/content/images/logo.png" alt="Logo LeiteVida" width="150">
-
 ## 📋 Sobre o Projeto
 
 LeiteVida é um sistema web desenvolvido para otimizar e gerenciar todos os processos operacionais de um Banco de Leite Humano (BLH). O sistema facilita o cadastro e acompanhamento de doadoras, o registro de coletas de leite materno, o controle de estoque e a distribuição do leite processado para pacientes neonatais.
