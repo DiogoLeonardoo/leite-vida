@@ -342,35 +342,51 @@ export const UserManagement = () => {
       )}
 
       {/* Modal para resetar senha */}
-      <Modal isOpen={modalOpen} toggle={toggleModal} centered>
-        <ModalHeader toggle={toggleModal} className="bg-primary text-white">
-          <FontAwesomeIcon icon={faLock} className="me-2" />
-          Resetar Senha
+      <Modal isOpen={modalOpen} toggle={toggleModal} centered className="password-reset-modal">
+        <ModalHeader toggle={toggleModal} className="bg-white border-0 pb-0">
+          <span className="modal-title">Resetar Senha</span>
         </ModalHeader>
         <Form onSubmit={handlePasswordSubmit}>
-          <ModalBody>
-            <div className="mb-3">
-              <strong>Usuário:</strong> {selectedUser?.login} ({selectedUser?.email})
+          <ModalBody className="pt-3">
+            <div className="modal-icon-container mb-3">
+              <div className="modal-icon">
+                <FontAwesomeIcon icon={faLock} size="lg" />
+              </div>
             </div>
-            <div className="alert alert-info">
-              <strong>Nova senha padrão:</strong> leitevida123
-              <br />
-              <small>O usuário deverá alterar esta senha no primeiro acesso.</small>
+            <div className="text-center mb-4">
+              <h5 className="user-info">
+                {selectedUser?.firstName} {selectedUser?.lastName}
+              </h5>
+              <p className="text-muted mb-0">
+                {selectedUser?.login} ({selectedUser?.email})
+              </p>
+            </div>
+            <div className="alert alert-info rounded-3">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0 me-3">
+                  <FontAwesomeIcon icon="info-circle" size="lg" />
+                </div>
+                <div className="flex-grow-1">
+                  <strong>Nova senha padrão:</strong> leitevida123
+                  <br />
+                  <small>O usuário deverá alterar esta senha no primeiro acesso.</small>
+                </div>
+              </div>
             </div>
           </ModalBody>
-          <ModalFooter>
-            <Button type="button" color="secondary" onClick={toggleModal} disabled={resetLoading}>
+          <ModalFooter className="border-0 pt-0 d-flex justify-content-center gap-2">
+            <Button type="button" color="secondary" outline onClick={toggleModal} disabled={resetLoading} className="px-4">
               Cancelar
             </Button>
-            <Button type="submit" color="primary" disabled={resetLoading}>
+            <Button type="submit" color="primary" disabled={resetLoading} className="px-4">
               {resetLoading ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                   Resetando...
                 </>
               ) : (
                 <>
-                  <FontAwesomeIcon icon={faLock} className="me-1" />
+                  <FontAwesomeIcon icon={faLock} className="me-2" />
                   Resetar Senha
                 </>
               )}
@@ -380,41 +396,52 @@ export const UserManagement = () => {
       </Modal>
 
       {/* Modal para confirmar exclusão */}
-      <Modal isOpen={deleteModalOpen} toggle={toggleDeleteModal} centered>
-        <ModalHeader toggle={toggleDeleteModal} className="bg-danger text-white">
-          <FontAwesomeIcon icon="trash" className="me-2" />
-          Confirmar Exclusão
+      <Modal isOpen={deleteModalOpen} toggle={toggleDeleteModal} centered className="delete-user-modal">
+        <ModalHeader toggle={toggleDeleteModal} className="bg-white border-0 pb-0">
+          <span className="modal-title">Confirmar Exclusão</span>
         </ModalHeader>
-        <ModalBody>
+        <ModalBody className="pt-3">
           <div className="text-center">
-            <FontAwesomeIcon icon="exclamation-triangle" size="3x" className="text-warning mb-3" />
-            <h5>Tem certeza que deseja excluir este usuário?</h5>
-            <div className="mt-3 p-3 bg-light rounded">
-              <strong>Usuário:</strong> {userToDelete?.firstName} {userToDelete?.lastName}
-              <br />
-              <strong>Login:</strong> {userToDelete?.login}
-              <br />
-              <strong>Email:</strong> {userToDelete?.email}
+            <div className="modal-icon-container mb-3">
+              <div className="modal-icon modal-icon-danger">
+                <FontAwesomeIcon icon="trash" size="lg" />
+              </div>
             </div>
-            <div className="alert alert-warning mt-3">
-              <FontAwesomeIcon icon="exclamation-triangle" className="me-2" />
-              <strong>Atenção:</strong> Esta ação não pode ser desfeita!
+            <h5 className="user-info">
+              {userToDelete?.firstName} {userToDelete?.lastName}
+            </h5>
+            <p className="text-muted mb-0">
+              {userToDelete?.login} ({userToDelete?.email})
+            </p>
+
+            <div className="alert alert-warning mt-4 rounded-3">
+              <div className="d-flex align-items-center">
+                <div className="flex-shrink-0 me-3">
+                  <FontAwesomeIcon icon="exclamation-triangle" size="lg" />
+                </div>
+                <div className="flex-grow-1 text-start">
+                  <strong>Atenção:</strong> Esta ação não pode ser desfeita! Todos os dados associados a este usuário serão removidos
+                  permanentemente.
+                </div>
+              </div>
             </div>
+
+            <p className="confirmation-text mt-3">Você tem certeza que deseja excluir este usuário?</p>
           </div>
         </ModalBody>
-        <ModalFooter>
-          <Button type="button" color="secondary" onClick={toggleDeleteModal} disabled={deleteLoading}>
+        <ModalFooter className="border-0 pt-0 d-flex justify-content-center gap-2">
+          <Button type="button" color="secondary" outline onClick={toggleDeleteModal} disabled={deleteLoading} className="px-4">
             Cancelar
           </Button>
-          <Button color="danger" onClick={confirmDeleteUser} disabled={deleteLoading}>
+          <Button color="danger" onClick={confirmDeleteUser} disabled={deleteLoading} className="px-4">
             {deleteLoading ? (
               <>
-                <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Excluindo...
               </>
             ) : (
               <>
-                <FontAwesomeIcon icon="trash" className="me-1" />
+                <FontAwesomeIcon icon="trash" className="me-2" />
                 Confirmar Exclusão
               </>
             )}

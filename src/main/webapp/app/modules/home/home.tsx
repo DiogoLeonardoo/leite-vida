@@ -83,175 +83,177 @@ export const Home = () => {
 
   return (
     <div className="home-page">
-      <Container fluid className="py-4 px-5">
-        {/* Header com boas vindas */}
-        <Row className="mb-4">
-          <Col>
-            <div className="welcome-section d-flex align-items-center">
-              <div className="welcome-icon me-3">
-                <div className="icon-circle">
-                  <i className="fas fa-tint text-success">
-                    <img src="./content/images/criancanobraco.svg" style={{ width: '40px', height: '40px' }} />
-                  </i>
+      <div className="home-content">
+        <Container className="py-4">
+          {/* Header com boas vindas */}
+          <Row className="mb-4">
+            <Col>
+              <div className="welcome-section d-flex align-items-center">
+                <div className="welcome-icon me-3">
+                  <div className="icon-circle">
+                    <i className="fas fa-tint text-success">
+                      <img src="./content/images/criancanobraco.svg" style={{ width: '40px', height: '40px' }} />
+                    </i>
+                  </div>
+                </div>
+                <div>
+                  <h2 className="welcome-title mb-1">Bem-vindo ao LeiteVida</h2>
+                  <p className="welcome-subtitle text-muted mb-0">
+                    Olá, {account?.firstName}! Gerencie doações e distribuições de leite materno
+                  </p>
                 </div>
               </div>
-              <div>
-                <h2 className="welcome-title mb-1">Bem-vindo ao LeiteVida</h2>
-                <p className="welcome-subtitle text-muted mb-0">
-                  Olá, {account?.firstName}! Gerencie doações e distribuições de leite materno
-                </p>
-              </div>
-            </div>
-          </Col>
-        </Row>
-
-        {/* Cards de estatísticas */}
-        <Row className="mb-4">
-          <Col md={4} className="mb-3">
-            <Card className="stats-card h-100">
-              <CardBody className="d-flex align-items-center">
-                <div className="text-center flex-grow-1">
-                  <div className="stats-icon mb-2">
-                    <i className="fas fa-users text-primary"></i>
-                  </div>
-                  <div className="stats-number">
-                    {loading ? (
-                      <div className="spinner-border spinner-border-sm text-primary" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    ) : error ? (
-                      <span className="text-danger">--</span>
-                    ) : (
-                      doadorasCount || 0
-                    )}
-                  </div>
-                  <div className="stats-label">DOADORAS CADASTRADAS</div>
-                </div>
-                <div className="ms-3">
-                  <img src="./content/images/pessoas.svg" style={{ width: '60px', height: '60px' }} />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col md={4} className="mb-3">
-            <Card className="stats-card stats-card-success h-100">
-              <CardBody className="d-flex align-items-center">
-                <div className="text-center flex-grow-1">
-                  <div className="stats-icon mb-2">
-                    <i className="fas fa-battery-full text-white"></i>
-                  </div>
-                  <div className="stats-number text-white">
-                    {loading ? (
-                      <div className="spinner-border spinner-border-sm text-white" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    ) : error ? (
-                      <span className="text-white">--</span>
-                    ) : (
-                      `${volumeSum || 0}mL`
-                    )}
-                  </div>
-                  <div className="stats-label text-white">DE LEITE EM ESTOQUE</div>
-                </div>
-                <div className="ms-3">
-                  <img src="./content/images/mamadeira.svg" style={{ width: '60px', height: '60px' }} />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col md={4} className="mb-3">
-            <Card className="stats-card h-100">
-              <CardBody className="d-flex align-items-center">
-                <div className="text-center flex-grow-1">
-                  <div className="stats-icon mb-2">
-                    <i className="fas fa-flask text-info"></i>
-                  </div>
-                  <div className="stats-number">
-                    {loading ? (
-                      <div className="spinner-border spinner-border-sm text-info" role="status">
-                        <span className="visually-hidden">Carregando...</span>
-                      </div>
-                    ) : error ? (
-                      <span className="text-danger">--</span>
-                    ) : (
-                      `${processamentoSum || 0}mL`
-                    )}
-                  </div>
-                  <div className="stats-label">DE LEITE EM PROCESSAMENTO</div>
-                </div>
-                <div className="ms-3">
-                  <img src="./content/images/frascolab.svg" style={{ width: '60px', height: '60px' }} />
-                </div>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* Botões de ação */}
-        {isLabUser ? (
-          <Row>
-            <Col md={4} className="mb-3 offset-md-4">
-              <Button color="primary" block size="lg" className="action-button text-center" onClick={handleRealizarAnalises}>
-                <i className="fas fa-flask me-2"></i>
-                Realizar Análises
-                <div className="button-subtitle">Avalie os leites coletados</div>
-              </Button>
             </Col>
           </Row>
-        ) : (
-          <>
+
+          {/* Cards de estatísticas */}
+          <Row className="mb-4">
+            <Col sm={12} md={4} className="mb-3">
+              <Card className="stats-card h-100">
+                <CardBody className="d-flex align-items-center">
+                  <div className="text-center flex-grow-1">
+                    <div className="stats-icon mb-2">
+                      <i className="fas fa-users text-primary"></i>
+                    </div>
+                    <div className="stats-number">
+                      {loading ? (
+                        <div className="spinner-border spinner-border-sm text-primary" role="status">
+                          <span className="visually-hidden">Carregando...</span>
+                        </div>
+                      ) : error ? (
+                        <span className="text-danger">--</span>
+                      ) : (
+                        doadorasCount || 0
+                      )}
+                    </div>
+                    <div className="stats-label">DOADORAS CADASTRADAS</div>
+                  </div>
+                  <div className="ms-3">
+                    <img src="./content/images/pessoas.svg" style={{ width: '60px', height: '60px' }} />
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col sm={12} md={4} className="mb-3">
+              <Card className="stats-card stats-card-success h-100">
+                <CardBody className="d-flex align-items-center">
+                  <div className="text-center flex-grow-1">
+                    <div className="stats-icon mb-2">
+                      <i className="fas fa-battery-full text-white"></i>
+                    </div>
+                    <div className="stats-number text-white">
+                      {loading ? (
+                        <div className="spinner-border spinner-border-sm text-white" role="status">
+                          <span className="visually-hidden">Carregando...</span>
+                        </div>
+                      ) : error ? (
+                        <span className="text-white">--</span>
+                      ) : (
+                        `${volumeSum || 0}mL`
+                      )}
+                    </div>
+                    <div className="stats-label text-white">DE LEITE EM ESTOQUE</div>
+                  </div>
+                  <div className="ms-3">
+                    <img src="./content/images/mamadeira.svg" style={{ width: '60px', height: '60px' }} />
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+            <Col sm={12} md={4} className="mb-3">
+              <Card className="stats-card h-100">
+                <CardBody className="d-flex align-items-center">
+                  <div className="text-center flex-grow-1">
+                    <div className="stats-icon mb-2">
+                      <i className="fas fa-flask text-info"></i>
+                    </div>
+                    <div className="stats-number">
+                      {loading ? (
+                        <div className="spinner-border spinner-border-sm text-info" role="status">
+                          <span className="visually-hidden">Carregando...</span>
+                        </div>
+                      ) : error ? (
+                        <span className="text-danger">--</span>
+                      ) : (
+                        `${processamentoSum || 0}mL`
+                      )}
+                    </div>
+                    <div className="stats-label">DE LEITE EM PROCESSAMENTO</div>
+                  </div>
+                  <div className="ms-3">
+                    <img src="./content/images/frascolab.svg" style={{ width: '60px', height: '60px' }} />
+                  </div>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+
+          {/* Botões de ação */}
+          {isLabUser ? (
             <Row>
-              <Col md={4} className="mb-3">
-                <Button color="secondary" block size="lg" className="action-button" onClick={handleNovaColeta}>
-                  <i className="fas fa-plus-circle me-2"></i>
-                  Nova Coleta
-                  <div className="button-subtitle">Registrar nova coleta de leite materno</div>
-                </Button>
-              </Col>
-              <Col md={4} className="mb-3">
-                <Button color="success" block size="lg" className="action-button" onClick={handleNovaDoadora}>
-                  <i className="fas fa-user-plus me-2"></i>
-                  Nova Doadora
-                  <div className="button-subtitle">Cadastrar nova doadora</div>
-                </Button>
-              </Col>
-              <Col md={4} className="mb-3">
-                <Button color="primary" block size="lg" className="action-button" onClick={handleNovoPaciente}>
-                  <i className="fas fa-baby me-2"></i>
-                  Novo Paciente
-                  <div className="button-subtitle">Registrar novo paciente</div>
+              <Col xs={12} md={4} className="mb-3 mx-auto">
+                <Button color="primary" block size="lg" className="action-button text-center" onClick={handleRealizarAnalises}>
+                  <i className="fas fa-flask me-2"></i>
+                  Realizar Análises
+                  <div className="button-subtitle">Avalie os leites coletados</div>
                 </Button>
               </Col>
             </Row>
-
-            <Row>
-              <Col md={4} className="mb-3">
-                <Button color="success" block size="lg" className="action-button" onClick={handleConsultarEstoque}>
-                  <i className="fas fa-search me-2"></i>
-                  Consultar Estoque
-                  <div className="button-subtitle">Verificar o estoque de leite materno</div>
-                </Button>
-              </Col>
-              {isAdmin && (
-                <Col md={4} className="mb-3">
-                  <Button color="light" block size="lg" className="action-button" onClick={handleUsuarios}>
-                    <i className="fas fa-users-cog me-2"></i>
-                    Usuários
-                    <div className="button-subtitle">Gerenciar usuários do sistema</div>
+          ) : (
+            <>
+              <Row>
+                <Col xs={12} md={4} className="mb-3">
+                  <Button color="secondary" block size="lg" className="action-button" onClick={handleNovaColeta}>
+                    <i className="fas fa-plus-circle me-2"></i>
+                    Nova Coleta
+                    <div className="button-subtitle">Registrar nova coleta de leite materno</div>
                   </Button>
                 </Col>
-              )}
-              <Col md={4} className="mb-3">
-                <Button color="success" block size="lg" className="action-button" onClick={handleNovaDistribuicao}>
-                  <i className="fas fa-share-alt me-2"></i>
-                  Nova Distribuição
-                  <div className="button-subtitle">Realizar uma nova distribuição</div>
-                </Button>
-              </Col>
-            </Row>
-          </>
-        )}
-      </Container>
+                <Col xs={12} md={4} className="mb-3">
+                  <Button color="success" block size="lg" className="action-button" onClick={handleNovaDoadora}>
+                    <i className="fas fa-user-plus me-2"></i>
+                    Nova Doadora
+                    <div className="button-subtitle">Cadastrar nova doadora</div>
+                  </Button>
+                </Col>
+                <Col xs={12} md={4} className="mb-3">
+                  <Button color="primary" block size="lg" className="action-button" onClick={handleNovoPaciente}>
+                    <i className="fas fa-baby me-2"></i>
+                    Novo Paciente
+                    <div className="button-subtitle">Registrar novo paciente</div>
+                  </Button>
+                </Col>
+              </Row>
+
+              <Row>
+                <Col xs={12} md={4} className="mb-3">
+                  <Button color="success" block size="lg" className="action-button" onClick={handleConsultarEstoque}>
+                    <i className="fas fa-search me-2"></i>
+                    Consultar Estoque
+                    <div className="button-subtitle">Verificar o estoque de leite materno</div>
+                  </Button>
+                </Col>
+                {isAdmin && (
+                  <Col xs={12} md={4} className="mb-3">
+                    <Button color="light" block size="lg" className="action-button" onClick={handleUsuarios}>
+                      <i className="fas fa-users-cog me-2"></i>
+                      Usuários
+                      <div className="button-subtitle">Gerenciar usuários do sistema</div>
+                    </Button>
+                  </Col>
+                )}
+                <Col xs={12} md={4} className="mb-3">
+                  <Button color="success" block size="lg" className="action-button" onClick={handleNovaDistribuicao}>
+                    <i className="fas fa-share-alt me-2"></i>
+                    Nova Distribuição
+                    <div className="button-subtitle">Realizar uma nova distribuição</div>
+                  </Button>
+                </Col>
+              </Row>
+            </>
+          )}
+        </Container>
+      </div>
     </div>
   );
 };
