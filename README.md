@@ -1,6 +1,6 @@
 # LeiteVida - Sistema de Gerenciamento para Banco de Leite Humano
 
-![Logo LeiteVida](./src/main/webapp/content/images/logo-full.png)
+<img src="./src/main/webapp/content/images/logo.png" alt="Logo LeiteVida" width="150">
 
 ## 📋 Sobre o Projeto
 
@@ -115,13 +115,13 @@ O sistema oferece diferentes perfis de acesso:
 
 ### Tela de Login
 
-![Tela de Login](./docs/images/login-screen.png)
+<img src="./src/main/webapp/content/images/screenshots/login-screen.png" alt="Tela de Login" width="600">
 
 A tela de login apresenta uma interface limpa e intuitiva com o logotipo do LeiteVida. Os usuários devem inserir seu CPF e senha para acessar o sistema.
 
 ### Dashboard
 
-![Dashboard](./docs/images/dashboard.png)
+<img src="./src/main/webapp/content/images/screenshots/dashboard.png" alt="Dashboard" width="800">
 
 O dashboard principal mostra estatísticas importantes:
 
@@ -133,13 +133,13 @@ Também apresenta acesso rápido às principais funcionalidades através de bot�
 
 ### Listagem de Doadoras
 
-![Lista de Doadoras](./docs/images/doadoras-list.png)
+<img src="./src/main/webapp/content/images/screenshots/doadoras-list.png" alt="Lista de Doadoras" width="800">
 
 Interface para visualização e gerenciamento de doadoras cadastradas, com opções para filtrar, editar e adicionar novas doadoras.
 
 ### Relatórios
 
-![Relatório de Coletas](./docs/images/relatorio-coletas.png)
+<img src="./src/main/webapp/content/images/screenshots/relatorio-coletas.png" alt="Relatório de Coletas" width="800">
 
 O sistema permite gerar relatórios detalhados sobre coletas, processamento e distribuição, com filtros por período e possibilidade de exportação.
 
@@ -178,45 +178,3 @@ Este projeto está licenciado sob a licença [MIT](LICENSE).
 ## 📞 Suporte
 
 Para suporte, entre em contato através do email: suporte@leitevida.com.br
-Para parar:
-
-```bash
-docker compose -f src/main/docker/services.yml down
-```
-
----
-
-### 🧠 Análise de Qualidade com SonarQube
-
-```bash
-docker compose -f src/main/docker/sonar.yml up -d
-
-./gradlew -Pprod clean check jacocoTestReport sonarqube \
-  -Dsonar.login=admin -Dsonar.password=admin
-```
-
----
-
-### 🧪 CI/CD (opcional)
-
-Gere arquivos para CI com:
-
-```bash
-jhipster ci-cd
-```
-
----
-
-## 🤝 Contribuição
-
-Este é um **projeto individual de TCC**, mas contribuições futuras são **bem-vindas** para evolução e aprimoramento da aplicação.
-
----
-
-## 📛 Licença
-
-Este projeto é de código aberto, mas orientado por fins acadêmicos. Consulte o autor para uso em produção.
-
----
-
-## 📌 #leiteVida
