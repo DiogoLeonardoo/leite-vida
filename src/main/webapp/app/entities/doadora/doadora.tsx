@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table } from 'reactstrap';
+import { Button, Row, Table, Input, InputGroup, InputGroupText } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
-import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
+import { ASC, DESC, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
-import { useAppDispatch, useAppSelector } from 'app/config/store';
+import { useAppDispatch } from 'app/config/store';
+import { maskCPF, maskPhone } from 'app/shared/util/validation-utils';
+import axios from 'axios';
+import './doadora.scss';
 
-import { getEntities } from './doadora.reducer';
+const ITEMS_PER_PAGE = 6;
 
 export const Doadora = () => {
   const dispatch = useAppDispatch();
@@ -20,54 +22,94 @@ export const Doadora = () => {
   const [paginationState, setPaginationState] = useState(
     overridePaginationStateWithQueryParams(getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'), pageLocation.search),
   );
+  const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
 
-  const doadoraList = useAppSelector(state => state.doadora.entities);
-  const loading = useAppSelector(state => state.doadora.loading);
-  const totalItems = useAppSelector(state => state.doadora.totalItems);
+  const [doadoraList, setDoadoraList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
 
-  const getAllEntities = () => {
-    dispatch(
-      getEntities({
-        page: paginationState.activePage - 1,
-        size: paginationState.itemsPerPage,
-        sort: `${paginationState.sort},${paginationState.order}`,
-      }),
-    );
-  };
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      setPaginationState(prev => ({
+        ...prev,
+        activePage: 1,
+      }));
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  const sortEntities = () => {
-    getAllEntities();
-    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
-    if (pageLocation.search !== endURL) {
-      navigate(`${pageLocation.pathname}${endURL}`);
+  const fetchDoadoras = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get('/api/doadoras/buscar-doadoras', {
+        params: {
+          page: paginationState.activePage - 1,
+          size: paginationState.itemsPerPage,
+          sort: `${paginationState.sort},${paginationState.order}`,
+          search: debouncedSearchTerm || undefined,
+        },
+      });
+
+      // Handle the nested content array in the response
+      const responseData = response.data;
+      const doadoras = responseData.content || responseData;
+
+      setDoadoraList(doadoras);
+
+      // Get total count from either the response headers or the response itself
+      const totalCount = responseData.totalElements || parseInt(response.headers['x-total-count'], 10);
+      setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+    } catch (error) {
+      console.error('Error fetching doadoras:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    sortEntities();
-  }, [paginationState.activePage, paginationState.order, paginationState.sort]);
+    fetchDoadoras();
+  }, [debouncedSearchTerm, paginationState.activePage, paginationState.order, paginationState.sort]);
 
   useEffect(() => {
     const params = new URLSearchParams(pageLocation.search);
     const page = params.get('page');
     const sort = params.get(SORT);
+    const search = params.get('search');
+
     if (page && sort) {
       const sortSplit = sort.split(',');
-      setPaginationState({
-        ...paginationState,
+      setPaginationState(prev => ({
+        ...prev,
         activePage: +page,
         sort: sortSplit[0],
         order: sortSplit[1],
-      });
+      }));
+    }
+
+    if (search && search !== searchTerm) {
+      setSearchTerm(search);
     }
   }, [pageLocation.search]);
 
-  const sort = p => () => {
-    setPaginationState({
-      ...paginationState,
-      order: paginationState.order === ASC ? DESC : ASC,
-      sort: p,
-    });
+  useEffect(() => {
+    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}${debouncedSearchTerm ? `&search=${encodeURIComponent(debouncedSearchTerm)}` : ''}`;
+    if (pageLocation.search !== endURL) {
+      navigate(`${pageLocation.pathname}${endURL}`);
+    }
+  }, [
+    paginationState.activePage,
+    paginationState.sort,
+    paginationState.order,
+    debouncedSearchTerm,
+    navigate,
+    pageLocation.pathname,
+    pageLocation.search,
+  ]);
+
+  const handleSearch = event => {
+    setSearchTerm(event.target.value);
   };
 
   const handlePagination = currentPage =>
@@ -76,168 +118,50 @@ export const Doadora = () => {
       activePage: currentPage,
     });
 
-  const handleSyncList = () => {
-    sortEntities();
-  };
-
-  const getSortIconByFieldName = (fieldName: string) => {
-    const sortFieldName = paginationState.sort;
-    const order = paginationState.order;
-    if (sortFieldName !== fieldName) {
-      return faSort;
-    }
-    return order === ASC ? faSortUp : faSortDown;
-  };
-
   return (
-    <div>
-      <h2 id="doadora-heading" data-cy="DoadoraHeading">
-        <Translate contentKey="leiteVidaApp.doadora.home.title">Doadoras</Translate>
-        <div className="d-flex justify-content-end">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
-            <FontAwesomeIcon icon="sync" spin={loading} />{' '}
-            <Translate contentKey="leiteVidaApp.doadora.home.refreshListLabel">Refresh List</Translate>
-          </Button>
-          <Link to="/doadora/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
-            <FontAwesomeIcon icon="plus" />
-            &nbsp;
-            <Translate contentKey="leiteVidaApp.doadora.home.createLabel">Create new Doadora</Translate>
-          </Link>
-        </div>
-      </h2>
+    <div className="doadora-list-page">
+      <Row>
+        <h2 className="doadora-list-title">
+          Doadoras
+          <div className="d-flex align-items-center gap-3">
+            <InputGroup className="search-input">
+              <InputGroupText>
+                <FontAwesomeIcon icon="search" />
+              </InputGroupText>
+              <Input type="text" placeholder="Pesquisar doadoras..." value={searchTerm} onChange={handleSearch} />
+            </InputGroup>
+            <Link to="/doadora/new" className="btn btn-primary jh-create-entity">
+              <FontAwesomeIcon icon="plus" />
+              &nbsp; Criar Nova Doadora
+            </Link>
+          </div>
+        </h2>
+      </Row>
       <div className="table-responsive">
         {doadoraList && doadoraList.length > 0 ? (
           <Table responsive>
             <thead>
               <tr>
-                <th className="hand" onClick={sort('id')}>
-                  <Translate contentKey="leiteVidaApp.doadora.id">ID</Translate> <FontAwesomeIcon icon={getSortIconByFieldName('id')} />
-                </th>
-                <th className="hand" onClick={sort('nome')}>
-                  <Translate contentKey="leiteVidaApp.doadora.nome">Nome</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('nome')} />
-                </th>
-                <th className="hand" onClick={sort('cartaoSUS')}>
-                  <Translate contentKey="leiteVidaApp.doadora.cartaoSUS">Cartao SUS</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('cartaoSUS')} />
-                </th>
-                <th className="hand" onClick={sort('cpf')}>
-                  <Translate contentKey="leiteVidaApp.doadora.cpf">Cpf</Translate> <FontAwesomeIcon icon={getSortIconByFieldName('cpf')} />
-                </th>
-                <th className="hand" onClick={sort('dataNascimento')}>
-                  <Translate contentKey="leiteVidaApp.doadora.dataNascimento">Data Nascimento</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('dataNascimento')} />
-                </th>
-                <th className="hand" onClick={sort('cep')}>
-                  <Translate contentKey="leiteVidaApp.doadora.cep">Cep</Translate> <FontAwesomeIcon icon={getSortIconByFieldName('cep')} />
-                </th>
-                <th className="hand" onClick={sort('estado')}>
-                  <Translate contentKey="leiteVidaApp.doadora.estado">Estado</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('estado')} />
-                </th>
-                <th className="hand" onClick={sort('cidade')}>
-                  <Translate contentKey="leiteVidaApp.doadora.cidade">Cidade</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('cidade')} />
-                </th>
-                <th className="hand" onClick={sort('endereco')}>
-                  <Translate contentKey="leiteVidaApp.doadora.endereco">Endereco</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('endereco')} />
-                </th>
-                <th className="hand" onClick={sort('telefone')}>
-                  <Translate contentKey="leiteVidaApp.doadora.telefone">Telefone</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('telefone')} />
-                </th>
-                <th className="hand" onClick={sort('profissao')}>
-                  <Translate contentKey="leiteVidaApp.doadora.profissao">Profissao</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('profissao')} />
-                </th>
-                <th className="hand" onClick={sort('tipoDoadora')}>
-                  <Translate contentKey="leiteVidaApp.doadora.tipoDoadora">Tipo Doadora</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('tipoDoadora')} />
-                </th>
-                <th className="hand" onClick={sort('localPreNatal')}>
-                  <Translate contentKey="leiteVidaApp.doadora.localPreNatal">Local Pre Natal</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('localPreNatal')} />
-                </th>
-                <th className="hand" onClick={sort('resultadoVDRL')}>
-                  <Translate contentKey="leiteVidaApp.doadora.resultadoVDRL">Resultado VDRL</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('resultadoVDRL')} />
-                </th>
-                <th className="hand" onClick={sort('resultadoHBsAg')}>
-                  <Translate contentKey="leiteVidaApp.doadora.resultadoHBsAg">Resultado H Bs Ag</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('resultadoHBsAg')} />
-                </th>
-                <th className="hand" onClick={sort('resultadoFTAabs')}>
-                  <Translate contentKey="leiteVidaApp.doadora.resultadoFTAabs">Resultado FT Aabs</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('resultadoFTAabs')} />
-                </th>
-                <th className="hand" onClick={sort('resultadoHIV')}>
-                  <Translate contentKey="leiteVidaApp.doadora.resultadoHIV">Resultado HIV</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('resultadoHIV')} />
-                </th>
-                <th className="hand" onClick={sort('transfusaoUltimos5Anos')}>
-                  <Translate contentKey="leiteVidaApp.doadora.transfusaoUltimos5Anos">Transfusao Ultimos 5 Anos</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('transfusaoUltimos5Anos')} />
-                </th>
-                <th className="hand" onClick={sort('dataRegistro')}>
-                  <Translate contentKey="leiteVidaApp.doadora.dataRegistro">Data Registro</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('dataRegistro')} />
-                </th>
-                <th />
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Data de Nascimento</th>
+                <th>Telefone</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {doadoraList.map((doadora, i) => (
                 <tr key={`entity-${i}`} data-cy="entityTable">
-                  <td>
-                    <Button tag={Link} to={`/doadora/${doadora.id}`} color="link" size="sm">
-                      {doadora.id}
-                    </Button>
-                  </td>
                   <td>{doadora.nome}</td>
-                  <td>{doadora.cartaoSUS}</td>
-                  <td>{doadora.cpf}</td>
+                  <td>{maskCPF(doadora.cpf)}</td>
                   <td>
                     {doadora.dataNascimento ? (
                       <TextFormat type="date" value={doadora.dataNascimento} format={APP_LOCAL_DATE_FORMAT} />
                     ) : null}
                   </td>
-                  <td>{doadora.cep}</td>
-                  <td>{doadora.estado}</td>
-                  <td>{doadora.cidade}</td>
-                  <td>{doadora.endereco}</td>
-                  <td>{doadora.telefone}</td>
-                  <td>{doadora.profissao}</td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.TipoDoadora.${doadora.tipoDoadora}`} />
-                  </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.LocalPreNatal.${doadora.localPreNatal}`} />
-                  </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.ResultadoExame.${doadora.resultadoVDRL}`} />
-                  </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.ResultadoExame.${doadora.resultadoHBsAg}`} />
-                  </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.ResultadoExame.${doadora.resultadoFTAabs}`} />
-                  </td>
-                  <td>
-                    <Translate contentKey={`leiteVidaApp.ResultadoExame.${doadora.resultadoHIV}`} />
-                  </td>
-                  <td>{doadora.transfusaoUltimos5Anos ? 'true' : 'false'}</td>
-                  <td>
-                    {doadora.dataRegistro ? <TextFormat type="date" value={doadora.dataRegistro} format={APP_LOCAL_DATE_FORMAT} /> : null}
-                  </td>
+                  <td>{maskPhone(doadora.telefone)}</td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`/doadora/${doadora.id}`} color="info" size="sm" data-cy="entityDetailsButton">
-                        <FontAwesomeIcon icon="eye" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.view">View</Translate>
-                        </span>
-                      </Button>
                       <Button
                         tag={Link}
                         to={`/doadora/${doadora.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
@@ -250,19 +174,6 @@ export const Doadora = () => {
                           <Translate contentKey="entity.action.edit">Edit</Translate>
                         </span>
                       </Button>
-                      <Button
-                        onClick={() =>
-                          (window.location.href = `/doadora/${doadora.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`)
-                        }
-                        color="danger"
-                        size="sm"
-                        data-cy="entityDeleteButton"
-                      >
-                        <FontAwesomeIcon icon="trash" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.delete">Delete</Translate>
-                        </span>
-                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -270,11 +181,7 @@ export const Doadora = () => {
             </tbody>
           </Table>
         ) : (
-          !loading && (
-            <div className="alert alert-warning">
-              <Translate contentKey="leiteVidaApp.doadora.home.notFound">No Doadoras found</Translate>
-            </div>
-          )
+          !loading && <div className="alert alert-warning">Não há Doadoras</div>
         )}
       </div>
       {totalItems ? (

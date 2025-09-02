@@ -1,24 +1,38 @@
 package com.mycompany.myapp.web.rest;
 
+import com.itextpdf.text.DocumentException;
+import com.mycompany.myapp.domain.Estoque;
+import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.StatusColeta;
+import com.mycompany.myapp.domain.enumeration.StatusLote;
+import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.EstoqueRepository;
+import com.mycompany.myapp.service.EstoquePdfService;
 import com.mycompany.myapp.service.EstoqueQueryService;
 import com.mycompany.myapp.service.EstoqueService;
 import com.mycompany.myapp.service.criteria.EstoqueCriteria;
+import com.mycompany.myapp.service.dto.ColetaDTO;
 import com.mycompany.myapp.service.dto.EstoqueDTO;
+import com.mycompany.myapp.service.dto.EstoqueDoadoraDTO;
 import com.mycompany.myapp.web.rest.errors.BadRequestAlertException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
@@ -46,17 +60,27 @@ public class EstoqueResource {
 
     private final EstoqueQueryService estoqueQueryService;
 
-    public EstoqueResource(EstoqueService estoqueService, EstoqueRepository estoqueRepository, EstoqueQueryService estoqueQueryService) {
+    private final EstoquePdfService estoquePdfService;
+
+    public EstoqueResource(
+        EstoqueService estoqueService,
+        EstoqueRepository estoqueRepository,
+        EstoqueQueryService estoqueQueryService,
+        EstoquePdfService estoquePdfService
+    ) {
         this.estoqueService = estoqueService;
         this.estoqueRepository = estoqueRepository;
         this.estoqueQueryService = estoqueQueryService;
+        this.estoquePdfService = estoquePdfService;
     }
 
     /**
      * {@code POST  /estoques} : Create a new estoque.
      *
      * @param estoqueDTO the estoqueDTO to create.
-     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with body the new estoqueDTO, or with status {@code 400 (Bad Request)} if the estoque has already an ID.
+     * @return the {@link ResponseEntity} with status {@code 201 (Created)} and with
+     *         body the new estoqueDTO, or with status {@code 400 (Bad Request)} if
+     *         the estoque has already an ID.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PostMapping("")
@@ -74,11 +98,14 @@ public class EstoqueResource {
     /**
      * {@code PUT  /estoques/:id} : Updates an existing estoque.
      *
-     * @param id the id of the estoqueDTO to save.
+     * @param id         the id of the estoqueDTO to save.
      * @param estoqueDTO the estoqueDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated estoqueDTO,
-     * or with status {@code 400 (Bad Request)} if the estoqueDTO is not valid,
-     * or with status {@code 500 (Internal Server Error)} if the estoqueDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated estoqueDTO,
+     *         or with status {@code 400 (Bad Request)} if the estoqueDTO is not
+     *         valid,
+     *         or with status {@code 500 (Internal Server Error)} if the estoqueDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PutMapping("/{id}")
@@ -105,14 +132,19 @@ public class EstoqueResource {
     }
 
     /**
-     * {@code PATCH  /estoques/:id} : Partial updates given fields of an existing estoque, field will ignore if it is null
+     * {@code PATCH  /estoques/:id} : Partial updates given fields of an existing
+     * estoque, field will ignore if it is null
      *
-     * @param id the id of the estoqueDTO to save.
+     * @param id         the id of the estoqueDTO to save.
      * @param estoqueDTO the estoqueDTO to update.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the updated estoqueDTO,
-     * or with status {@code 400 (Bad Request)} if the estoqueDTO is not valid,
-     * or with status {@code 404 (Not Found)} if the estoqueDTO is not found,
-     * or with status {@code 500 (Internal Server Error)} if the estoqueDTO couldn't be updated.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the updated estoqueDTO,
+     *         or with status {@code 400 (Bad Request)} if the estoqueDTO is not
+     *         valid,
+     *         or with status {@code 404 (Not Found)} if the estoqueDTO is not
+     *         found,
+     *         or with status {@code 500 (Internal Server Error)} if the estoqueDTO
+     *         couldn't be updated.
      * @throws URISyntaxException if the Location URI syntax is incorrect.
      */
     @PatchMapping(value = "/{id}", consumes = { "application/json", "application/merge-patch+json" })
@@ -145,7 +177,8 @@ public class EstoqueResource {
      *
      * @param pageable the pagination information.
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list of estoques in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the list
+     *         of estoques in body.
      */
     @GetMapping("")
     public ResponseEntity<List<EstoqueDTO>> getAllEstoques(
@@ -163,7 +196,8 @@ public class EstoqueResource {
      * {@code GET  /estoques/count} : count all the estoques.
      *
      * @param criteria the criteria which the requested entities should match.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count in body.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and the count
+     *         in body.
      */
     @GetMapping("/count")
     public ResponseEntity<Long> countEstoques(EstoqueCriteria criteria) {
@@ -175,7 +209,8 @@ public class EstoqueResource {
      * {@code GET  /estoques/:id} : get the "id" estoque.
      *
      * @param id the id of the estoqueDTO to retrieve.
-     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the estoqueDTO, or with status {@code 404 (Not Found)}.
+     * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body
+     *         the estoqueDTO, or with status {@code 404 (Not Found)}.
      */
     @GetMapping("/{id}")
     public ResponseEntity<EstoqueDTO> getEstoque(@PathVariable("id") Long id) {
@@ -197,5 +232,145 @@ public class EstoqueResource {
         return ResponseEntity.noContent()
             .headers(HeaderUtil.createEntityDeletionAlert(applicationName, true, ENTITY_NAME, id.toString()))
             .build();
+    }
+
+    @GetMapping("/soma-volume")
+    public Long getSomaVolumeDisponivel() {
+        return estoqueService.somarVolumeDisponivelMl();
+    }
+
+    @GetMapping("/buscar-estoques")
+    public ResponseEntity<Page<Estoque>> listarEstoques(
+        @RequestParam(required = false) TipoLeite tipoLeite,
+        @RequestParam(required = false) ClassificacaoLeite classificacao,
+        @RequestParam(required = false) StatusLote statusLote,
+        @ParameterObject Pageable pageable
+    ) {
+        Page<Estoque> estoques = estoqueService.buscarTodos(tipoLeite, classificacao, statusLote, pageable);
+        return ResponseEntity.ok(estoques);
+    }
+
+    @GetMapping("/estoque-doadora/{estoqueId}")
+    public ResponseEntity<EstoqueDoadoraDTO> getEstoqueDoadora(@PathVariable Long estoqueId) {
+        EstoqueDoadoraDTO dto = estoqueService.buscarDetalhesEstoque(estoqueId);
+
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(dto);
+    }
+
+    @PatchMapping("/{id}/reservar")
+    public ResponseEntity<EstoqueDTO> reservarEstoque(@PathVariable("id") Long id) {
+        LOG.debug("REST request to reserve Estoque : {}", id);
+
+        if (!estoqueRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<EstoqueDTO> estoqueDTO = estoqueService.findOne(id);
+        if (estoqueDTO.isEmpty()) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        EstoqueDTO estoque = estoqueDTO.get();
+        estoque.setStatusLote(StatusLote.RESERVADO);
+
+        EstoqueDTO result = estoqueService.update(estoque);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
+
+    @PatchMapping("/{id}/liberar")
+    public ResponseEntity<EstoqueDTO> liberarEstoque(@PathVariable("id") Long id) {
+        LOG.debug("REST request to liberate Estoque : {}", id);
+
+        if (!estoqueRepository.existsById(id)) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        Optional<EstoqueDTO> estoqueDTO = estoqueService.findOne(id);
+        if (estoqueDTO.isEmpty()) {
+            throw new BadRequestAlertException("Entity not found", ENTITY_NAME, "idnotfound");
+        }
+
+        EstoqueDTO estoque = estoqueDTO.get();
+        estoque.setStatusLote(StatusLote.DISPONIVEL);
+
+        EstoqueDTO result = estoqueService.update(estoque);
+
+        return ResponseEntity.ok()
+            .headers(HeaderUtil.createEntityUpdateAlert(applicationName, true, ENTITY_NAME, result.getId().toString()))
+            .body(result);
+    }
+
+    @GetMapping("/relatorio/estoque/pdf")
+    public ResponseEntity<byte[]> gerarPdfEstoque(
+        @RequestParam(required = false) String tipoLeite,
+        @RequestParam(required = false) String statusLote,
+        @RequestParam(required = false) String classificacao,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim
+    ) throws DocumentException {
+        try {
+            LOG.debug(
+                "Gerando relatório PDF com parâmetros: tipoLeite={}, statusLote={}, classificacao={}, dataInicio={}, dataFim={}",
+                tipoLeite,
+                statusLote,
+                classificacao,
+                dataInicio,
+                dataFim
+            );
+
+            TipoLeite tipoLeiteEnum = null;
+            if (tipoLeite != null && !tipoLeite.isEmpty()) {
+                try {
+                    tipoLeiteEnum = TipoLeite.valueOf(tipoLeite);
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("TipoLeite inválido: {}", tipoLeite);
+                }
+            }
+
+            StatusLote statusLoteEnum = null;
+            if (statusLote != null && !statusLote.isEmpty()) {
+                try {
+                    statusLoteEnum = StatusLote.valueOf(statusLote);
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("StatusLote inválido: {}", statusLote);
+                }
+            }
+
+            ClassificacaoLeite classificacaoEnum = null;
+            if (classificacao != null && !classificacao.isEmpty()) {
+                try {
+                    classificacaoEnum = ClassificacaoLeite.valueOf(classificacao);
+                } catch (IllegalArgumentException e) {
+                    LOG.warn("Classificacao inválida: {}", classificacao);
+                }
+            }
+
+            List<Estoque> estoques = estoqueRepository.buscarComFiltros(
+                tipoLeiteEnum,
+                statusLoteEnum,
+                classificacaoEnum,
+                dataInicio,
+                dataFim
+            );
+
+            LOG.debug("Encontrados {} registros para o relatório", estoques.size());
+
+            byte[] pdfBytes = estoquePdfService.gerarRelatorioEstoque(estoques);
+
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_estoque.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfBytes);
+        } catch (Exception e) {
+            LOG.error("Erro ao gerar relatório de estoque: ", e);
+            return ResponseEntity.internalServerError().build();
+        }
     }
 }

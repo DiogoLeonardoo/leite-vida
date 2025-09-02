@@ -53,8 +53,10 @@ public class Processamento implements Serializable {
     @JoinColumn(unique = true)
     private Estoque estoque;
 
+    // ALTERAÇÃO: Agora o Processamento possui a chave estrangeira para Coleta
     @JsonIgnoreProperties(value = { "processamento", "doadora" }, allowSetters = true)
-    @OneToOne(fetch = FetchType.LAZY, mappedBy = "processamento")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coleta_id", unique = true)
     private Coleta coleta;
 
     // jhipster-needle-entity-add-field - JHipster will add fields here
@@ -167,6 +169,7 @@ public class Processamento implements Serializable {
         return this.coleta;
     }
 
+    // ALTERAÇÃO: Método setter atualizado para gerenciar o relacionamento bidirecional
     public void setColeta(Coleta coleta) {
         if (this.coleta != null) {
             this.coleta.setProcessamento(null);

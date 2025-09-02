@@ -55,8 +55,11 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
     private String email;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(name = "activated")
     private boolean activated = false;
+
+    @Column(name = "must_change_password")
+    private boolean mustChangePassword = false;
 
     @Size(min = 2, max = 10)
     @Column(name = "lang_key", length = 10)
@@ -192,6 +195,14 @@ public class User extends AbstractAuditingEntity<Long> implements Serializable {
 
     public void setAuthorities(Set<Authority> authorities) {
         this.authorities = authorities;
+    }
+
+    public boolean isMustChangePassword() {
+        return mustChangePassword;
+    }
+
+    public void setMustChangePassword(boolean mustChangePassword) {
+        this.mustChangePassword = mustChangePassword;
     }
 
     @Override

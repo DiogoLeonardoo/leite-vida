@@ -14,7 +14,10 @@ import EntitiesRoutes from 'app/entities/routes';
 import PrivateRoute from 'app/shared/auth/private-route';
 import ErrorBoundaryRoutes from 'app/shared/error/error-boundary-routes';
 import PageNotFound from 'app/shared/error/page-not-found';
+import Unauthorized from 'app/shared/error/unauthorized';
 import { AUTHORITIES } from 'app/config/constants';
+import PasswordChange from './modules/account/password-change/password-change';
+import Relatorios from './entities/relatorio/relatorios';
 
 const loading = <div>loading ...</div>;
 
@@ -31,14 +34,22 @@ const AppRoutes = () => {
   return (
     <div className="view-routes">
       <ErrorBoundaryRoutes>
-        <Route index element={<Home />} />
-        <Route path="login" element={<Login />} />
+        <Route index element={<Login />} />
+        <Route
+          path="home"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.ENF, AUTHORITIES.LAB]}>
+              <Home />
+            </PrivateRoute>
+          }
+        />
         <Route path="logout" element={<Logout />} />
+        <Route path="unauthorized" element={<Unauthorized />} />
         <Route path="account">
           <Route
             path="*"
             element={
-              <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.USER]}>
+              <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
                 <Account />
               </PrivateRoute>
             }
@@ -58,14 +69,26 @@ const AppRoutes = () => {
             </PrivateRoute>
           }
         />
+        <Route path="*" element={<EntitiesRoutes />} />
+
         <Route
-          path="*"
+          path="account/password-change"
           element={
-            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.USER]}>
-              <EntitiesRoutes />
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN, AUTHORITIES.ENF, AUTHORITIES.LAB]}>
+              <PasswordChange />
             </PrivateRoute>
           }
         />
+
+        <Route
+          path="relatorios"
+          element={
+            <PrivateRoute hasAnyAuthorities={[AUTHORITIES.ADMIN]}>
+              <Relatorios />
+            </PrivateRoute>
+          }
+        />
+
         <Route path="*" element={<PageNotFound />} />
       </ErrorBoundaryRoutes>
     </div>

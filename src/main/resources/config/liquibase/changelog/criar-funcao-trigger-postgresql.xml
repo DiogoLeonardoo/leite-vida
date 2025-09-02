@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+    
+    <changeSet id="criar-funcao-trigger-postgresql" author="Diogo Leonardo" dbms="postgresql">
+        <comment>Versao especifica para PostgreSQL usando funcao</comment>
+        
+        <sql splitStatements="false"><![CDATA[
+            CREATE OR REPLACE FUNCTION verificar_estoque_vencido()
+            RETURNS TRIGGER AS $$
+            BEGIN
+                IF NEW.data_validade < CURRENT_DATE THEN
+                    NEW.status_lote := 'EXPIRADO';
+                END IF;
+                
+                RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+        ]]></sql>
+        
+        <sql><![CDATA[
+            DROP TRIGGER IF EXISTS trg_verificar_estoque_vencido ON estoque;
+        ]]></sql>
+        
+        <sql><![CDATA[
+            CREATE TRIGGER trg_verificar_estoque_vencido
+                BEFORE INSERT OR UPDATE ON estoque
+                FOR EACH ROW
+                EXECUTE FUNCTION verificar_estoque_vencido();
+        ]]></sql>
+        
+        <rollback><![CDATA[
+            DROP TRIGGER IF EXISTS trg_verificar_estoque_vencido ON estoque;
+            DROP FUNCTION IF EXISTS verificar_estoque_vencido();
+        ]]></rollback>
+    </changeSet>
+
+    <changeSet id="atualizar-estoques-ja-vencidos" author="Diogo Leonardo" dbms="postgresql">
+        <comment>Atualiza registros existentes que ja estao vencidos</comment>
+        
+        <sql><![CDATA[
+            UPDATE estoque 
+            SET status_lote = 'EXPIRADO' 
+            WHERE data_validade < CURRENT_DATE 
+              AND (status_lote IS NULL OR status_lote != 'EXPIRADO');
+        ]]></sql>
+        
+        <rollback>
+            <comment>Rollback manual necessario - verificar status_lote originais</comment>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

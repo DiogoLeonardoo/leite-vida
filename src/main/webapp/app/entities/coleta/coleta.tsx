@@ -1,66 +1,121 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Button, Table } from 'reactstrap';
+import { Button, Table, Input, InputGroup, InputGroupText, Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import { JhiItemCount, JhiPagination, TextFormat, Translate, getPaginationState } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSort, faSortDown, faSortUp } from '@fortawesome/free-solid-svg-icons';
+import { faSort, faSortDown, faSortUp, faEye } from '@fortawesome/free-solid-svg-icons';
 import { APP_LOCAL_DATE_FORMAT } from 'app/config/constants';
-import { ASC, DESC, ITEMS_PER_PAGE, SORT } from 'app/shared/util/pagination.constants';
+import { ASC, DESC, SORT } from 'app/shared/util/pagination.constants';
 import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-utils';
-import { useAppDispatch, useAppSelector } from 'app/config/store';
+import { useAppSelector } from 'app/config/store';
+import { hasAnyAuthority } from 'app/shared/auth/private-route';
+import { AUTHORITIES } from 'app/config/constants';
+import axios from 'axios';
+import FrascoLabModal from './frascolab-modal';
+import ProcessingModal from './processing-modal';
+import './coleta.scss';
 
-import { getEntities } from './coleta.reducer';
+const ITEMS_PER_PAGE = 4;
 
 export const Coleta = () => {
-  const dispatch = useAppDispatch();
-
   const pageLocation = useLocation();
   const navigate = useNavigate();
+  const account = useAppSelector(state => state.authentication.account);
+  const isLab = hasAnyAuthority(account.authorities, [AUTHORITIES.LAB]);
 
   const [paginationState, setPaginationState] = useState(
     overridePaginationStateWithQueryParams(getPaginationState(pageLocation, ITEMS_PER_PAGE, 'id'), pageLocation.search),
   );
 
-  const coletaList = useAppSelector(state => state.coleta.entities);
-  const loading = useAppSelector(state => state.coleta.loading);
-  const totalItems = useAppSelector(state => state.coleta.totalItems);
+  const [searchId, setSearchId] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [debouncedSearchId, setDebouncedSearchId] = useState('');
 
-  const getAllEntities = () => {
-    dispatch(
-      getEntities({
+  const [coletaList, setColetaList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalItems, setTotalItems] = useState(0);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedColetaId, setSelectedColetaId] = useState(null);
+  const [showFrascoLabModal, setShowFrascoLabModal] = useState(false);
+  const [selectedFrascoLabId, setSelectedFrascoLabId] = useState(null);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [selectedProcessingId, setSelectedProcessingId] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedColetaDetails, setSelectedColetaDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchId(searchId);
+      setPaginationState(prev => ({
+        ...prev,
+        activePage: 1,
+      }));
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchId]);
+
+  const fetchColetas = async () => {
+    setLoading(true);
+    try {
+      const params = {
         page: paginationState.activePage - 1,
         size: paginationState.itemsPerPage,
         sort: `${paginationState.sort},${paginationState.order}`,
-      }),
-    );
-  };
+        id: debouncedSearchId ? String(debouncedSearchId) : undefined,
+        status: statusFilter || undefined,
+      };
 
-  const sortEntities = () => {
-    getAllEntities();
-    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
-    if (pageLocation.search !== endURL) {
-      navigate(`${pageLocation.pathname}${endURL}`);
+      const response = await axios.get('/api/coletas/buscar-coletas', {
+        params,
+      });
+
+      const responseData = response.data;
+      const coletas = responseData.content || responseData;
+
+      setColetaList(coletas);
+      const totalCount = responseData.totalElements || parseInt(response.headers['x-total-count'], 10);
+      setTotalItems(isNaN(totalCount) ? 0 : totalCount);
+    } catch (error) {
+      console.error('Error fetching coletas:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    sortEntities();
-  }, [paginationState.activePage, paginationState.order, paginationState.sort]);
+    fetchColetas();
+  }, [
+    debouncedSearchId,
+    statusFilter,
+    paginationState.activePage,
+    paginationState.order,
+    paginationState.sort,
+    paginationState.itemsPerPage,
+  ]);
 
   useEffect(() => {
     const params = new URLSearchParams(pageLocation.search);
     const page = params.get('page');
     const sort = params.get(SORT);
+
     if (page && sort) {
       const sortSplit = sort.split(',');
-      setPaginationState({
-        ...paginationState,
+      setPaginationState(prev => ({
+        ...prev,
         activePage: +page,
         sort: sortSplit[0],
         order: sortSplit[1],
-      });
+      }));
     }
   }, [pageLocation.search]);
+
+  useEffect(() => {
+    const endURL = `?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`;
+    if (pageLocation.search !== endURL) {
+      navigate(`${pageLocation.pathname}${endURL}`);
+    }
+  }, [paginationState.activePage, paginationState.sort, paginationState.order, navigate, pageLocation.pathname, pageLocation.search]);
 
   const sort = p => () => {
     setPaginationState({
@@ -76,8 +131,103 @@ export const Coleta = () => {
       activePage: currentPage,
     });
 
-  const handleSyncList = () => {
-    sortEntities();
+  const handleSearchId = event => {
+    setSearchId(event.target.value);
+  };
+
+  const handleStatusFilter = event => {
+    const newStatus = event.target.value;
+    console.log('Status filter changed to:', newStatus);
+    setStatusFilter(newStatus);
+    setPaginationState(prev => ({
+      ...prev,
+      activePage: 1,
+    }));
+  };
+
+  const handleCancelClick = coletaId => {
+    setSelectedColetaId(coletaId);
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      await axios.patch(`/api/coletas/${selectedColetaId}/cancelar`);
+
+      // Refresh the coleta list after successful cancellation
+      await fetchColetas();
+
+      console.log('Coleta cancelled successfully:', selectedColetaId);
+    } catch (error) {
+      console.error('Error cancelling coleta:', error);
+      // You could add a toast notification here for error handling
+    } finally {
+      setShowCancelModal(false);
+      setSelectedColetaId(null);
+    }
+  };
+
+  const handleCloseCancelModal = () => {
+    setShowCancelModal(false);
+    setSelectedColetaId(null);
+  };
+
+  const handleFrascoLabClick = coletaId => {
+    setSelectedFrascoLabId(coletaId);
+    setShowFrascoLabModal(true);
+  };
+
+  const handleCloseFrascoLabModal = () => {
+    setShowFrascoLabModal(false);
+    setSelectedFrascoLabId(null);
+  };
+
+  const handleConfirmFrascoLab = coletaId => {
+    try {
+      setSelectedProcessingId(coletaId);
+      setShowProcessingModal(true);
+
+      console.log('Opening processing modal for coleta:', coletaId);
+    } catch (error) {
+      console.error('Error opening processing modal:', error);
+    }
+  };
+
+  const handleCloseProcessingModal = () => {
+    setShowProcessingModal(false);
+    setSelectedProcessingId(null);
+  };
+
+  const handleSaveProcessing = async (coletaId, processingData) => {
+    try {
+      console.log('Saving processing data for coleta:', coletaId, processingData);
+
+      await fetchColetas();
+
+      console.log('Processing data saved successfully:', coletaId);
+    } catch (error) {
+      console.error('Error saving processing data:', error);
+    }
+  };
+
+  const handleDetailsClick = async coletaId => {
+    setShowDetailsModal(true);
+    setDetailsLoading(true);
+
+    try {
+      const response = await axios.get(`/api/coletas/coleta-doadora/${coletaId}`);
+      setSelectedColetaDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching coleta details:', error);
+      setSelectedColetaDetails(null);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleCloseDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedColetaDetails(null);
   };
 
   const getSortIconByFieldName = (fieldName: string) => {
@@ -89,20 +239,77 @@ export const Coleta = () => {
     return order === ASC ? faSortUp : faSortDown;
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'PROCESSADA':
+        return '#7AD27D';
+      case 'AGUARDANDO_PROCESSAMENTO':
+        return '#FFF3B0';
+      case 'CANCELADA':
+        return '#D27A7A';
+      default:
+        return '#f8f9fa';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'AGUARDANDO_PROCESSAMENTO':
+        return 'AGUARDANDO PROCESSAMENTO';
+      default:
+        return status;
+    }
+  };
+
+  const StatusBadge = ({ status }) => (
+    <span
+      style={{
+        backgroundColor: getStatusColor(status),
+        padding: '4px 8px',
+        borderRadius: '4px',
+        fontSize: '12px',
+        fontWeight: '500',
+        color: '#000',
+        display: 'inline-block',
+        minWidth: '120px',
+        textAlign: 'center',
+      }}
+    >
+      {getStatusText(status)}
+    </span>
+  );
+
   return (
-    <div>
-      <h2 id="coleta-heading" data-cy="ColetaHeading">
+    <div className="coleta-list-page">
+      <h2 className="coleta-list-title">
         <Translate contentKey="leiteVidaApp.coleta.home.title">Coletas</Translate>
-        <div className="d-flex justify-content-end">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
-            <FontAwesomeIcon icon="sync" spin={loading} />{' '}
-            <Translate contentKey="leiteVidaApp.coleta.home.refreshListLabel">Refresh List</Translate>
-          </Button>
-          <Link to="/coleta/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
-            <FontAwesomeIcon icon="plus" />
-            &nbsp;
-            <Translate contentKey="leiteVidaApp.coleta.home.createLabel">Create new Coleta</Translate>
-          </Link>
+        <div className="d-flex">
+          <InputGroup className="search-input me-2" style={{ width: '200px' }}>
+            <InputGroupText>
+              <FontAwesomeIcon icon="search" />
+            </InputGroupText>
+            <Input type="text" placeholder="Buscar por ID..." value={searchId} onChange={handleSearchId} />
+          </InputGroup>
+
+          <Input
+            type="select"
+            className="me-2"
+            style={{ width: '200px', height: '48px' }}
+            value={statusFilter}
+            onChange={handleStatusFilter}
+          >
+            <option value="">Todos os Status</option>
+            <option value="AGUARDANDO_PROCESSAMENTO">Aguardando Processamento</option>
+            <option value="PROCESSADA">Processada</option>
+            <option value="CANCELADA">Cancelada</option>
+          </Input>
+
+          {!isLab && (
+            <Link to="/coleta/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
+              <FontAwesomeIcon icon="plus" />
+              &nbsp; Criar nova coleta
+            </Link>
+          )}
         </div>
       </h2>
       <div className="table-responsive">
@@ -110,95 +317,96 @@ export const Coleta = () => {
           <Table responsive>
             <thead>
               <tr>
-                <th className="hand" onClick={sort('id')}>
-                  <Translate contentKey="leiteVidaApp.coleta.id">ID</Translate> <FontAwesomeIcon icon={getSortIconByFieldName('id')} />
-                </th>
-                <th className="hand" onClick={sort('dataColeta')}>
-                  <Translate contentKey="leiteVidaApp.coleta.dataColeta">Data Coleta</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('dataColeta')} />
-                </th>
-                <th className="hand" onClick={sort('volumeMl')}>
-                  <Translate contentKey="leiteVidaApp.coleta.volumeMl">Volume Ml</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('volumeMl')} />
-                </th>
-                <th className="hand" onClick={sort('temperatura')}>
-                  <Translate contentKey="leiteVidaApp.coleta.temperatura">Temperatura</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('temperatura')} />
-                </th>
-                <th className="hand" onClick={sort('localColeta')}>
-                  <Translate contentKey="leiteVidaApp.coleta.localColeta">Local Coleta</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('localColeta')} />
-                </th>
-                <th className="hand" onClick={sort('observacoes')}>
-                  <Translate contentKey="leiteVidaApp.coleta.observacoes">Observacoes</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('observacoes')} />
-                </th>
-                <th className="hand" onClick={sort('statusColeta')}>
-                  <Translate contentKey="leiteVidaApp.coleta.statusColeta">Status Coleta</Translate>{' '}
-                  <FontAwesomeIcon icon={getSortIconByFieldName('statusColeta')} />
-                </th>
-                <th>
-                  <Translate contentKey="leiteVidaApp.coleta.processamento">Processamento</Translate> <FontAwesomeIcon icon="sort" />
-                </th>
-                <th>
-                  <Translate contentKey="leiteVidaApp.coleta.doadora">Doadora</Translate> <FontAwesomeIcon icon="sort" />
-                </th>
-                <th />
+                <th>ID</th>
+                <th>Data Coleta</th>
+                <th>Volume (mL)</th>
+                <th>Local Coleta</th>
+                <th>Status Coleta</th>
+                <th>Detalhes</th>
               </tr>
             </thead>
             <tbody>
-              {coletaList.map((coleta, i) => (
-                <tr key={`entity-${i}`} data-cy="entityTable">
-                  <td>
-                    <Button tag={Link} to={`/coleta/${coleta.id}`} color="link" size="sm">
-                      {coleta.id}
-                    </Button>
-                  </td>
+              {coletaList.map(coleta => (
+                <tr key={`entity-${coleta.id}`} data-cy="entityTable">
+                  <td>{coleta.id}</td>
                   <td>{coleta.dataColeta ? <TextFormat type="date" value={coleta.dataColeta} format={APP_LOCAL_DATE_FORMAT} /> : null}</td>
                   <td>{coleta.volumeMl}</td>
-                  <td>{coleta.temperatura}</td>
                   <td>{coleta.localColeta}</td>
-                  <td>{coleta.observacoes}</td>
                   <td>
-                    <Translate contentKey={`leiteVidaApp.StatusColeta.${coleta.statusColeta}`} />
+                    <StatusBadge status={coleta.statusColeta} />
                   </td>
                   <td>
-                    {coleta.processamento ? <Link to={`/processamento/${coleta.processamento.id}`}>{coleta.processamento.id}</Link> : ''}
+                    <Button
+                      style={{ background: '#7ad27d', border: 'none' }}
+                      size="sm"
+                      onClick={() => handleDetailsClick(coleta.id)}
+                      title="Visualizar detalhes"
+                    >
+                      <FontAwesomeIcon icon={faEye} />
+                    </Button>
                   </td>
-                  <td>{coleta.doadora ? <Link to={`/doadora/${coleta.doadora.id}`}>{coleta.doadora.id}</Link> : ''}</td>
                   <td className="text-end">
                     <div className="btn-group flex-btn-group-container">
-                      <Button tag={Link} to={`/coleta/${coleta.id}`} color="info" size="sm" data-cy="entityDetailsButton">
-                        <FontAwesomeIcon icon="eye" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.view">View</Translate>
-                        </span>
-                      </Button>
-                      <Button
-                        tag={Link}
-                        to={`/coleta/${coleta.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
-                        color="primary"
-                        size="sm"
-                        data-cy="entityEditButton"
-                      >
-                        <FontAwesomeIcon icon="pencil-alt" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.edit">Edit</Translate>
-                        </span>
-                      </Button>
-                      <Button
-                        onClick={() =>
-                          (window.location.href = `/coleta/${coleta.id}/delete?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`)
-                        }
-                        color="danger"
-                        size="sm"
-                        data-cy="entityDeleteButton"
-                      >
-                        <FontAwesomeIcon icon="trash" />{' '}
-                        <span className="d-none d-md-inline">
-                          <Translate contentKey="entity.action.delete">Delete</Translate>
-                        </span>
-                      </Button>
+                      {isLab ? (
+                        coleta.statusColeta === 'AGUARDANDO_PROCESSAMENTO' && (
+                          <Button
+                            size="sm"
+                            className="btn-frascolab"
+                            data-cy="entityFrascoLabButton"
+                            style={{ background: '#7AD27D' }}
+                            onClick={() => handleFrascoLabClick(coleta.id)}
+                          >
+                            <img src="content/images/frascolab.svg" alt="Frascolab" style={{ width: '16px', height: '16px' }} />
+                          </Button>
+                        )
+                      ) : (
+                        <>
+                          {coleta.statusColeta !== 'CANCELADA' && coleta.statusColeta !== 'PROCESSADA' && (
+                            <Button
+                              size="sm"
+                              style={{
+                                backgroundColor: '#fff',
+                                borderColor: '#D27A7A',
+                                borderRadius: '6px',
+                                marginRight: '8px',
+                                color: '#D27A7A',
+                                fontWeight: '500',
+                                fontSize: '12px',
+                                padding: '6px 12px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                transition: 'all 0.2s ease-in-out',
+                                border: '1px solid #D27A7A',
+                              }}
+                              data-cy="entityCancelButton"
+                              onClick={() => handleCancelClick(coleta.id)}
+                              onMouseEnter={e => {
+                                (e.target as HTMLButtonElement).style.backgroundColor = '#D27A7A';
+                                (e.target as HTMLButtonElement).style.color = '#fff';
+                              }}
+                              onMouseLeave={e => {
+                                (e.target as HTMLButtonElement).style.backgroundColor = '#fff';
+                                (e.target as HTMLButtonElement).style.color = '#D27A7A';
+                              }}
+                            >
+                              <FontAwesomeIcon icon="times" />
+                              Cancelar
+                            </Button>
+                          )}
+                          {coleta.statusColeta !== 'PROCESSADA' && coleta.statusColeta !== 'CANCELADA' && (
+                            <Button
+                              tag={Link}
+                              to={`/coleta/${coleta.id}/edit?page=${paginationState.activePage}&sort=${paginationState.sort},${paginationState.order}`}
+                              color="primary"
+                              size="sm"
+                              data-cy="entityEditButton"
+                            >
+                              <FontAwesomeIcon icon="pencil-alt" />{' '}
+                            </Button>
+                          )}
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -206,11 +414,7 @@ export const Coleta = () => {
             </tbody>
           </Table>
         ) : (
-          !loading && (
-            <div className="alert alert-warning">
-              <Translate contentKey="leiteVidaApp.coleta.home.notFound">No Coletas found</Translate>
-            </div>
-          )
+          !loading && <div className="alert alert-warning">Nenhuma coleta encontrada</div>
         )}
       </div>
       {totalItems ? (
@@ -231,6 +435,93 @@ export const Coleta = () => {
       ) : (
         ''
       )}
+
+      <ProcessingModal
+        isOpen={showProcessingModal}
+        toggle={handleCloseProcessingModal}
+        coletaId={selectedProcessingId}
+        onSave={handleSaveProcessing}
+      />
+
+      <FrascoLabModal
+        isOpen={showFrascoLabModal}
+        toggle={handleCloseFrascoLabModal}
+        coletaId={selectedFrascoLabId}
+        onConfirm={handleConfirmFrascoLab}
+      />
+
+      <Modal isOpen={showCancelModal} toggle={handleCloseCancelModal}>
+        <ModalHeader toggle={handleCloseCancelModal}>Confirmar Cancelamento</ModalHeader>
+        <ModalBody>Tem certeza que deseja cancelar a coleta de ID {selectedColetaId}?</ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={handleCloseCancelModal}>
+            Não
+          </Button>
+          <Button color="danger" onClick={handleConfirmCancel} style={{ backgroundColor: '#D27A7A', borderColor: '#D27A7A' }}>
+            Sim, Cancelar
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={showDetailsModal} toggle={handleCloseDetailsModal} size="lg">
+        <ModalHeader toggle={handleCloseDetailsModal}>Detalhes da Coleta {selectedColetaDetails?.coletaId}</ModalHeader>
+        <ModalBody>
+          {detailsLoading ? (
+            <div className="d-flex justify-content-center">
+              <div className="spinner-border" role="status">
+                <span className="sr-only">Carregando detalhes...</span>
+              </div>
+            </div>
+          ) : selectedColetaDetails ? (
+            <div>
+              <div className="row">
+                <div className="col-md-6">
+                  <h5>Informações da Coleta</h5>
+                  <p>
+                    <strong>ID:</strong> {selectedColetaDetails.coletaId}
+                  </p>
+                  <p>
+                    <strong>Data da Coleta:</strong>{' '}
+                    {selectedColetaDetails.dataColeta ? (
+                      <TextFormat type="date" value={selectedColetaDetails.dataColeta} format={APP_LOCAL_DATE_FORMAT} />
+                    ) : (
+                      'N/A'
+                    )}
+                  </p>
+                  <p>
+                    <strong>Volume (mL):</strong> {selectedColetaDetails.volumeMl}
+                  </p>
+                  <p>
+                    <strong>Local da Coleta:</strong> {selectedColetaDetails.localColeta}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> <Translate contentKey={`leiteVidaApp.StatusColeta.${selectedColetaDetails.statusColeta}`} />
+                  </p>
+                </div>
+                <div className="col-md-6">
+                  <h5>Informações da Doadora</h5>
+                  <p>
+                    <strong>Nome:</strong> {selectedColetaDetails.nomeDoadora}
+                  </p>
+                  <p>
+                    <strong>CPF:</strong> {selectedColetaDetails.cpfDoadora}
+                  </p>
+                  <p>
+                    <strong>Telefone:</strong> {selectedColetaDetails.telefoneDoadora}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="alert alert-warning">Não foi possível carregar os detalhes da coleta.</div>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button color="secondary" onClick={handleCloseDetailsModal}>
+            Fechar
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 };

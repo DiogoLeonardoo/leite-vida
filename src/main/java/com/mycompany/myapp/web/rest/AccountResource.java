@@ -10,12 +10,14 @@ import com.mycompany.myapp.service.dto.PasswordChangeDTO;
 import com.mycompany.myapp.web.rest.errors.*;
 import com.mycompany.myapp.web.rest.vm.KeyAndPasswordVM;
 import com.mycompany.myapp.web.rest.vm.ManagedUserVM;
+import com.mycompany.myapp.web.rest.vm.PasswordChangeVM;
 import jakarta.validation.Valid;
 import java.util.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -168,6 +170,17 @@ public class AccountResource {
         if (!user.isPresent()) {
             throw new AccountResourceException("No user was found for this reset key");
         }
+    }
+
+    /**
+     * {@code POST   /account/change-password-first-login} : Change the password of the user at the first login.
+     *
+     * @param passwordChangeVM the new password.
+     */
+    @PostMapping("/account/change-password-first-login")
+    public ResponseEntity<Void> changePasswordFirstLogin(@Valid @RequestBody PasswordChangeVM passwordChangeVM) {
+        userService.changePasswordOnFirstLogin(passwordChangeVM.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 
     private static boolean isPasswordLengthInvalid(String password) {

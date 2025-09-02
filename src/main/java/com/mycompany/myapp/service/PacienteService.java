@@ -7,6 +7,8 @@ import com.mycompany.myapp.service.mapper.PacienteMapper;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,5 +96,9 @@ public class PacienteService {
     public void delete(Long id) {
         LOG.debug("Request to delete Paciente : {}", id);
         pacienteRepository.deleteById(id);
+    }
+
+    public Page<Paciente> buscarPacientes(String searchTerm, Pageable pageable) {
+        return pacienteRepository.findAllWithSearch(searchTerm, pageable);
     }
 }

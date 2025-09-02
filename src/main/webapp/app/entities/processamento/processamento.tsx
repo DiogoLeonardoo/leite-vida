@@ -10,6 +10,7 @@ import { overridePaginationStateWithQueryParams } from 'app/shared/util/entity-u
 import { useAppDispatch, useAppSelector } from 'app/config/store';
 
 import { getEntities } from './processamento.reducer';
+import './processamento.scss';
 
 export const Processamento = () => {
   const dispatch = useAppDispatch();
@@ -90,14 +91,10 @@ export const Processamento = () => {
   };
 
   return (
-    <div>
-      <h2 id="processamento-heading" data-cy="ProcessamentoHeading">
+    <div className="processamento-list-page">
+      <h2 className="processamento-list-title">
         <Translate contentKey="leiteVidaApp.processamento.home.title">Processamentos</Translate>
-        <div className="d-flex justify-content-end">
-          <Button className="me-2" color="info" onClick={handleSyncList} disabled={loading}>
-            <FontAwesomeIcon icon="sync" spin={loading} />{' '}
-            <Translate contentKey="leiteVidaApp.processamento.home.refreshListLabel">Refresh List</Translate>
-          </Button>
+        <div className="d-flex">
           <Link to="/processamento/new" className="btn btn-primary jh-create-entity" id="jh-create-entity" data-cy="entityCreateButton">
             <FontAwesomeIcon icon="plus" />
             &nbsp;

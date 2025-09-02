@@ -20,9 +20,23 @@ const apiUrl = 'api/estoques';
 
 export const getEntities = createAsyncThunk(
   'estoque/fetch_entity_list',
-  async ({ page, size, sort }: IQueryParams) => {
-    const requestUrl = `${apiUrl}?${sort ? `page=${page}&size=${size}&sort=${sort}&` : ''}cacheBuster=${new Date().getTime()}`;
-    return axios.get<IEstoque[]>(requestUrl);
+  async ({ page, size, sort, tipoLeite, classificacao }: IQueryParams & { tipoLeite?: string; classificacao?: string }) => {
+    let requestUrl = 'api/estoques';
+
+    // Use buscar-estoques endpoint if filters are provided
+    if (tipoLeite || classificacao) {
+      requestUrl = 'api/estoques/buscar-estoques';
+    }
+
+    const params = new URLSearchParams();
+    if (page !== undefined) params.append('page', page.toString());
+    if (size !== undefined) params.append('size', size.toString());
+    if (sort) params.append('sort', sort);
+    if (tipoLeite) params.append('tipoLeite', tipoLeite);
+    if (classificacao) params.append('classificacao', classificacao);
+
+    const requestUrlWithParams = `${requestUrl}?${params.toString()}`;
+    return axios.get<IEstoque[]>(requestUrlWithParams);
   },
   { serializeError: serializeAxiosError },
 );

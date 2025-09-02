@@ -1,8 +1,12 @@
 package com.mycompany.myapp.service;
 
 import com.mycompany.myapp.domain.Estoque;
+import com.mycompany.myapp.domain.enumeration.ClassificacaoLeite;
+import com.mycompany.myapp.domain.enumeration.StatusLote;
+import com.mycompany.myapp.domain.enumeration.TipoLeite;
 import com.mycompany.myapp.repository.EstoqueRepository;
 import com.mycompany.myapp.service.dto.EstoqueDTO;
+import com.mycompany.myapp.service.dto.EstoqueDoadoraDTO;
 import com.mycompany.myapp.service.mapper.EstoqueMapper;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,11 +15,14 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service Implementation for managing {@link com.mycompany.myapp.domain.Estoque}.
+ * Service Implementation for managing
+ * {@link com.mycompany.myapp.domain.Estoque}.
  */
 @Service
 @Transactional
@@ -79,8 +86,9 @@ public class EstoqueService {
     }
 
     /**
-     *  Get all the estoques where Processamento is {@code null}.
-     *  @return the list of entities.
+     * Get all the estoques where Processamento is {@code null}.
+     *
+     * @return the list of entities.
      */
     @Transactional(readOnly = true)
     public List<EstoqueDTO> findAllWhereProcessamentoIsNull() {
@@ -111,5 +119,36 @@ public class EstoqueService {
     public void delete(Long id) {
         LOG.debug("Request to delete Estoque : {}", id);
         estoqueRepository.deleteById(id);
+    }
+
+    public Long somarVolumeDisponivelMl() {
+        return estoqueRepository.somarVolumeDisponivelMl();
+    }
+
+    public Page<Estoque> buscarTodos(TipoLeite tipoLeite, ClassificacaoLeite classificacao, StatusLote statusLote, Pageable pageable) {
+        return estoqueRepository.buscarComFiltros(tipoLeite, classificacao, statusLote, pageable);
+    }
+
+    public EstoqueDoadoraDTO buscarDetalhesEstoque(Long estoqueId) {
+        List<Object[]> results = estoqueRepository.buscarDoadoraEstoque(estoqueId);
+        if (results.isEmpty()) {
+            return null;
+        }
+        Object[] result = results.get(0);
+        return new EstoqueDoadoraDTO(
+            ((Number) result[0]).longValue(),
+            ((java.sql.Date) result[1]).toLocalDate(),
+            (String) result[2],
+            (String) result[3],
+            ((Number) result[4]).doubleValue(),
+            ((Number) result[5]).doubleValue(),
+            (String) result[6],
+            (String) result[7],
+            (String) result[8],
+            (String) result[9],
+            ((java.sql.Date) result[10]).toLocalDate(),
+            ((Number) result[11]).doubleValue(),
+            ((Number) result[12]).doubleValue()
+        );
     }
 }

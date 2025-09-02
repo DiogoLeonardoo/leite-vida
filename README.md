@@ -1,216 +1,164 @@
-# 🍼 Sistema Web de Gerenciamento de Banco de Leite Humano Materno
+# LeiteVida - Sistema de Gerenciamento para Banco de Leite Humano
 
-Este repositório contém o projeto de sistema web desenvolvido como Trabalho de Conclusão de Curso (TCC) para o curso superior de **Análise e Desenvolvimento de Sistemas** do Instituto Federal de Educação, Ciência e Tecnologia de Sergipe (IFS) - Campus Aracaju.
+<img src="./src/main/webapp/content/images/logo.png" alt="Logo LeiteVida" width="150">
 
-O sistema visa otimizar a gestão de um Banco de Leite Humano Materno (BLH), abordando os desafios operacionais e a necessidade de rastreabilidade do leite.
+## 📋 Sobre o Projeto
 
----
+LeiteVida é um sistema web desenvolvido para otimizar e gerenciar todos os processos operacionais de um Banco de Leite Humano (BLH). O sistema facilita o cadastro e acompanhamento de doadoras, o registro de coletas de leite materno, o controle de estoque e a distribuição do leite processado para pacientes neonatais.
 
-## 🧩 Sobre o Projeto
+### Principais funcionalidades:
 
-Os Bancos de Leite Humano (BLH) desempenham um papel crucial na promoção do aleitamento materno e na nutrição neonatal, contribuindo significativamente para a redução da mortalidade infantil.
+- Cadastro e gerenciamento de doadoras
+- Registro e rastreamento de coletas de leite materno
+- Processamento e análise laboratorial das amostras
+- Controle de estoque e validade dos lotes
+- Gerenciamento de distribuição aos pacientes
+- Geração de relatórios e estatísticas
+- Controle de acesso por perfis de usuário
 
-Este projeto propõe uma solução web para informatizar a gestão de coletas, processamentos e distribuições de leite humano, oferecendo um ambiente estruturado e seguro para o controle interno de um BLH.
+## 🚀 Tecnologias Utilizadas
 
----
+- **Frontend**:
 
-## ✅ Funcionalidades Principais
+  - React/TypeScript
+  - React Router DOM
+  - Reactstrap (Bootstrap para React)
+  - SCSS para estilos personalizados
+  - FontAwesome para ícones
+  - Axios para requisições HTTP
 
-### 🔐 Módulo de Acesso e Usuários (Administrador)
+- **Backend**:
+  - Spring Boot
+  - Spring Security
+  - JPA/Hibernate
+  - Banco de dados relacional
+  - RESTful API
 
-- **Cadastro de Usuário**
-- **Login e Recuperação de Senha**
-- **Edição e Exclusão de Usuários**
-- **Listagem de Usuários**
+## 📦 Estrutura do Projeto
 
-### 👩‍⚕️ Gerenciamento de Doadoras (Enfermeira)
+O projeto segue uma arquitetura moderna de aplicação web com separação clara entre frontend e backend:
 
-- **Cadastro, Edição e Listagem de Doadoras**
-- **Cadastro Integrado com Coleta**
+```
+leite-vida/
+│
+├── src/main/
+│   ├── java/           # Código backend Java/Spring Boot
+│   ├── resources/      # Recursos para o backend
+│   └── webapp/         # Aplicação frontend React
+│       ├── app/        # Componentes React
+│       │   ├── config/         # Configurações
+│       │   ├── modules/        # Módulos da aplicação
+│       │   │   ├── home/       # Página inicial
+│       │   │   ├── doadora/    # Gerenciamento de doadoras
+│       │   │   ├── coleta/     # Gestão de coletas
+│       │   │   ├── estoque/    # Controle de estoque
+│       │   │   └── administration/ # Funções administrativas
+│       │   └── shared/         # Componentes compartilhados
+│       ├── content/    # Recursos estáticos (imagens, etc.)
+│       └── scss/       # Estilos globais
+│
+├── config/             # Configurações do projeto
+├── node_modules/       # Dependências Node.js
+└── package.json        # Definição de pacotes e scripts
+```
 
-### 🧑‍⚕️ Gerenciamento de Pacientes (Enfermeira)
+## 🔧 Instalação e Execução
 
-- **Cadastro, Edição e Listagem de Pacientes**
+### Pré-requisitos
 
-### 🧪 Coletas e Processamento (Enfermeira e Laboratório)
+- Node.js (v14+)
+- Java JDK 11+
+- Maven 3.6+
+- Banco de dados compatível (PostgreSQL recomendado)
 
-- **Cadastro de Coletas**
-- **Avaliação Microbiológica do Leite**
-- **Rastreabilidade Completa (doadora → paciente)**
+### Passos para execução
 
-### 🧊 Gerenciamento de Estoque (Enfermeira e Laboratório)
+1. Clone o repositório:
 
-- **Visualização e Filtros por Status/Tipo**
-- **Controle de Validade**
-- **Registros de Descarte Automatizados**
+   ```bash
+   git clone https://github.com/sua-organizacao/leite-vida.git
+   cd leite-vida
+   ```
 
-### 📦 Gerenciamento de Distribuições (Enfermeira)
+2. Instale as dependências do frontend:
 
-- **Cadastro de Distribuições com base em prescrição**
-- **Prescrição Médica com volume e frequência**
+   ```bash
+   npm install
+   ```
 
----
+3. Configure o banco de dados em `application.yml` ou através de variáveis de ambiente.
 
-## 💡 Usabilidade e Desempenho
+4. Execute o backend:
 
-- Interface intuitiva e responsiva
-- Feedback visual em tempo real
-- Rápido tempo de resposta
+   ```bash
+   ./mvnw spring-boot:run
+   ```
 
----
+5. Em outro terminal, execute o frontend:
+
+   ```bash
+   npm start
+   ```
+
+6. Acesse a aplicação em [http://localhost:8080](http://localhost:8080)
+
+7. Configure suas credenciais do banco de dados (PostgreSQL) em application-dev
+
+## 👤 Perfis de Usuário
+
+O sistema oferece diferentes perfis de acesso:
+
+1. **Administrador**: Acesso completo a todas as funcionalidades, incluindo gerenciamento de usuários.
+2. **Operador**: Pode registrar doadoras, coletas e distribuições.
+3. **Laboratório**: Responsável pelas análises e processamento do leite.
+4. **Consulta**: Acesso apenas para visualização de dados, sem permissão de alteração.
+
+## 📱 Interface do Sistema
+
+### Tela de Login
+
+<img src="./src/main/webapp/content/images/homeleite-vida.png" alt="Tela de Login" width="600">
+
+A tela de login apresenta uma interface limpa e intuitiva com o logotipo do LeiteVida. Os usuários devem inserir seu CPF e senha para acessar o sistema.
+
+### Home Page
+
+<img src="./src/main/webapp/content/images/homepage-leitevida.png" alt="Dashboard" width="800">
+
+O dashboard principal mostra estatísticas importantes:
+
+- Número de doadoras cadastradas
+- Volume de leite em estoque
+- Volume de leite em processamento
+
+Também apresenta acesso rápido às principais funcionalidades através de botões de ação.
+
+### Listagem de Doadoras
+
+<img src="./src/main/webapp/content/images/doadora-leitevida.png" alt="Lista de Doadoras" width="800">
+
+Interface para visualização e gerenciamento de doadoras cadastradas, com opções para filtrar, editar e adicionar novas doadoras.
+
+### Relatórios
+
+<img src="./src/main/webapp/content/images/relatorios-leitevida.png" alt="Relatório de Coletas" width="800">
+
+O sistema permite gerar relatórios detalhados sobre coletas, processamento e distribuição, com filtros por período e possibilidade de exportação.
 
 ## 🔒 Segurança
 
-- Autenticação com base em perfis (Administrador, Enfermeira, Laboratório)
-- Confidencialidade de dados sensíveis
+- Autenticação por login e senha
+- Controle de sessão
+- Validação de permissões por rota
+- Criptografia de dados sensíveis
+- Proteção contra CSRF e XSS
 
----
+## 📊 Funcionalidades de Relatórios
 
-## 📊 Relatórios e Dashboard
+O sistema oferece diversos relatórios para acompanhamento e gestão:
 
-- Relatórios de doações, coletas e distribuições
-- Dashboard com indicadores:
-  - Volume total em estoque
-  - Volume em análise
-  - Doadoras ativas
-  - Total de coletas realizadas
-
----
-
-## 🛠️ Modelagem do Sistema
-
-- **Elicitação de Requisitos**
-- **Casos de Uso (UML)**
-- **Diagramas BPMN**
-- **Diagrama Entidade-Relacionamento (DER)**
-- **Dicionarização do DER**
-- **Diagrama de Classes**
-
----
-
-## 🎨 Protótipo da Interface
-
-O sistema foi prototipado com foco em **usabilidade**, **acessibilidade** e **responsividade**, garantindo uma navegação fluida e intuitiva. A tela de login é um exemplo do design proposto.
-
----
-
-## 🚀 Como Rodar o Projeto
-
-This application was generated using JHipster **8.11.0**. For full documentation, visit:  
-📚 [https://www.jhipster.tech/documentation-archive/v8.11.0](https://www.jhipster.tech/documentation-archive/v8.11.0)
-
-### ⚙️ Requisitos
-
-- Java 17+
-- Node.js (configurado automaticamente com `./npmw`)
-- Docker (para serviços externos opcionais)
-- Gradle
-
----
-
-### 📦 Instalação
-
-Clone o repositório:
-
-```bash
-git clone https://github.com/seu-usuario/leite-vida.git
-cd leite-vida
-```
-
-Instale as dependências:
-
-```bash
-./npmw install
-```
-
----
-
-### 💻 Ambiente de Desenvolvimento
-
-Execute os comandos abaixo **em dois terminais diferentes**:
-
-```bash
-./gradlew -x webapp
-```
-
-```bash
-./npmw start
-```
-
----
-
-### 📦 Build para Produção
-
-```bash
-./gradlew -Pprod clean bootJar
-java -jar build/libs/*.jar
-```
-
-Acesse o sistema em: [http://localhost:8080](http://localhost:8080)
-
----
-
-### 🧪 Executar Testes
-
-#### Backend (Spring Boot)
-
-```bash
-./gradlew test integrationTest jacocoTestReport
-```
-
-#### Frontend (React - Jest)
-
-```bash
-./npmw test
-```
-
----
-
-### 🐳 Docker (Serviços Externos)
-
-```bash
-docker compose -f src/main/docker/services.yml up -d
-```
-
-Para parar:
-
-```bash
-docker compose -f src/main/docker/services.yml down
-```
-
----
-
-### 🧠 Análise de Qualidade com SonarQube
-
-```bash
-docker compose -f src/main/docker/sonar.yml up -d
-
-./gradlew -Pprod clean check jacocoTestReport sonarqube \
-  -Dsonar.login=admin -Dsonar.password=admin
-```
-
----
-
-### 🧪 CI/CD (opcional)
-
-Gere arquivos para CI com:
-
-```bash
-jhipster ci-cd
-```
-
----
-
-## 🤝 Contribuição
-
-Este é um **projeto individual de TCC**, mas contribuições futuras são **bem-vindas** para evolução e aprimoramento da aplicação.
-
----
-
-## 📛 Licença
-
-Este projeto é de código aberto, mas orientado por fins acadêmicos. Consulte o autor para uso em produção.
-
----
-
-## 📌 #leiteVida
+- Relatório de doadoras ativas
+- Relatório de coletas por período
+- Relatório de estoque (volume disponível e validade)
+- Relatório de distribuição (volume distribuído por paciente/hospital)
+- Estatísticas de produção e distribuição

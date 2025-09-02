@@ -1,5 +1,7 @@
 package com.mycompany.myapp.web.rest;
 
+import com.mycompany.myapp.domain.Doadora;
+import com.mycompany.myapp.domain.Paciente;
 import com.mycompany.myapp.repository.PacienteRepository;
 import com.mycompany.myapp.service.PacienteQueryService;
 import com.mycompany.myapp.service.PacienteService;
@@ -181,6 +183,12 @@ public class PacienteResource {
      * @param id the id of the pacienteDTO to retrieve.
      * @return the {@link ResponseEntity} with status {@code 200 (OK)} and with body the pacienteDTO, or with status {@code 404 (Not Found)}.
      */
+
+    @GetMapping("/buscar-pacientes")
+    public Page<Paciente> buscarDoadoras(@RequestParam(required = false, defaultValue = "") String search, Pageable pageable) {
+        return pacienteService.buscarPacientes(search, pageable);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PacienteDTO> getPaciente(@PathVariable("id") Long id) {
         LOG.debug("REST request to get Paciente : {}", id);
