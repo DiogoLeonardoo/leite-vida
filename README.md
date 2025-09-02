@@ -102,6 +102,8 @@ leite-vida/
 
 6. Acesse a aplicação em [http://localhost:8080](http://localhost:8080)
 
+7. Configure suas credenciais do banco de dados (PostgreSQL) em application-dev
+
 ## 👤 Perfis de Usuário
 
 O sistema oferece diferentes perfis de acesso:
@@ -160,21 +162,3 @@ O sistema oferece diversos relatórios para acompanhamento e gestão:
 - Relatório de estoque (volume disponível e validade)
 - Relatório de distribuição (volume distribuído por paciente/hospital)
 - Estatísticas de produção e distribuição
-
-## 🤝 Contribuição
-
-Para contribuir com o projeto:
-
-1. Crie um fork do repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/nome-da-feature`)
-3. Faça commit das suas alterações (`git commit -m 'Adiciona nova feature'`)
-4. Envie para o branch (`git push origin feature/nome-da-feature`)
-5. Abra um Pull Request
-
-## 📄 Licença
-
-Este projeto está licenciado sob a licença [MIT](LICENSE).
-
-## 📞 Suporte
-
-Para suporte, entre em contato através do email: suporte@leitevida.com.br
