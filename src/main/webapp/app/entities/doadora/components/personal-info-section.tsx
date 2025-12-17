@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardBody, CardHeader, Col, Row } from 'reactstrap';
 import { ValidatedField } from 'react-jhipster';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { validateCPF, validatePhone } from 'app/shared/util/validation-utils';
+import { validateCPF, validatePhone, validateCartaoSUS, maskCartaoSUS } from 'app/shared/util/validation-utils';
 import { toast } from 'react-toastify';
 
 interface PersonalInfoSectionProps {
@@ -35,6 +35,13 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ formDa
   const handlePhoneBlur = () => {
     if (formData.telefone && !validatePhone(formData.telefone)) {
       toast.info('Telefone inválido. Verifique o formato.');
+    }
+    validateForm();
+  };
+
+  const handleCartaoSUSBlur = () => {
+    if (formData.cartaoSUS && !validateCartaoSUS(formData.cartaoSUS)) {
+      toast.info('Cartão SUS inválido. Deve conter exatamente 15 dígitos numéricos.');
     }
     validateForm();
   };
@@ -94,10 +101,16 @@ export const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({ formDa
               data-cy="cartaoSUS"
               type="text"
               value={formData.cartaoSUS}
-              onChange={e => handleInputChange('cartaoSUS', e.target.value)}
+              onChange={e => {
+                const maskedValue = maskCartaoSUS(e.target.value);
+                handleInputChange('cartaoSUS', maskedValue);
+              }}
+              onBlur={handleCartaoSUSBlur}
+              maxLength={15}
+              placeholder="000000000000000"
               validate={{
                 required: { value: true, message: 'Cartão SUS é obrigatório' },
-                minLength: { value: 10, message: 'Cartão SUS deve ter pelo menos 10 caracteres' },
+                validate: value => validateCartaoSUS(value) || 'Cartão SUS deve conter exatamente 15 dígitos numéricos',
               }}
             />
           </Col>

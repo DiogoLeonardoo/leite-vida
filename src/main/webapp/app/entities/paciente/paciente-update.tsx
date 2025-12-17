@@ -10,6 +10,7 @@ import { createEntity, getEntity, reset, updateEntity } from './paciente.reducer
 import './paciente-update.scss';
 import { toast } from 'react-toastify';
 import { validateCPF, validatePhone, maskCPF, maskPhone, removeMask } from 'app/shared/util/validation-utils';
+import { CondicaoClinica } from 'app/shared/model/enumerations/condicao-clinica.model';
 
 export const PacienteUpdate = () => {
   const dispatch = useAppDispatch();
@@ -357,14 +358,25 @@ export const PacienteUpdate = () => {
                 id="paciente-condicaoClinica"
                 name="condicaoClinica"
                 data-cy="condicaoClinica"
-                type="textarea"
+                type="select"
                 className="form-control"
                 validate={{
                   required: { value: true, message: translate('entity.validation.required') },
                 }}
                 onChange={e => handleInputChange('condicaoClinica', e.target.value)}
                 value={formData.condicaoClinica}
-              />
+              >
+                <option value="" disabled>
+                  Selecione...
+                </option>
+                <option value={CondicaoClinica.ESTAVEL}>Estável</option>
+                <option value={CondicaoClinica.INTERNADO_UTI_NEONATAL}>Internado em UTI Neonatal</option>
+                <option value={CondicaoClinica.INTERNADO_UNIDADE_INTERMEDIARIA}>Internado em Unidade Intermediária</option>
+                <option value={CondicaoClinica.CUIDADOS_INTENSIVOS}>Em cuidados intensivos</option>
+                <option value={CondicaoClinica.ISOLAMENTO}>Em isolamento</option>
+                <option value={CondicaoClinica.POS_CIRURGICO}>Pós-cirúrgico</option>
+                <option value={CondicaoClinica.PATOLOGIA_ASSOCIADA}>Com patologia associada</option>
+              </ValidatedField>
             </div>
           </Col>
         </Row>

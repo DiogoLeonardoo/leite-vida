@@ -40,6 +40,13 @@ export const validatePhone = (phone: string): boolean => {
   return cleanPhone.length === 10 || cleanPhone.length === 11;
 };
 
+export const validateCartaoSUS = (cartaoSUS: string): boolean => {
+  if (!cartaoSUS) return false;
+
+  const cleanCartaoSUS = cartaoSUS.replace(/[^\d]/g, '');
+  return cleanCartaoSUS.length === 15 && /^\d{15}$/.test(cleanCartaoSUS);
+};
+
 export const maskCPF = (value: string): string => {
   if (!value) return '';
 
@@ -68,6 +75,14 @@ export const maskPhone = (value: string): string => {
   return `(${cleanValue.slice(0, 2)}) ${cleanValue.slice(2, 7)}-${cleanValue.slice(7, 11)}`;
 };
 
+export const maskCartaoSUS = (value: string): string => {
+  if (!value) return '';
+
+  const cleanValue = value.replace(/[^\d]/g, '');
+  // Limita a 15 dígitos
+  return cleanValue.slice(0, 15);
+};
+
 // Remove mask functions
 export const removeMask = (value: string): string => {
   if (!value) return '';
@@ -87,6 +102,10 @@ export const validationMessages = {
   phone: {
     required: 'Telefone é obrigatório',
     invalid: 'Telefone deve conter 10 ou 11 dígitos',
+  },
+  cartaoSUS: {
+    required: 'Cartão SUS é obrigatório',
+    invalid: 'Cartão SUS deve conter exatamente 15 dígitos',
   },
   nome: {
     required: 'Nome é obrigatório',

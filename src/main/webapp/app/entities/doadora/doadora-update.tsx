@@ -10,9 +10,11 @@ import {
   validateCPF,
   validateCEP,
   validatePhone,
+  validateCartaoSUS,
   maskCPF,
   maskCEP,
   maskPhone,
+  maskCartaoSUS,
   removeMask,
   validationMessages,
 } from 'app/shared/util/validation-utils';
@@ -172,6 +174,7 @@ export const DoadoraUpdate = () => {
     const requiredFields = {
       cpf: 'CPF',
       nome: 'Nome Completo',
+      cartaoSUS: 'Cartão SUS',
       telefone: 'Telefone',
       dataNascimento: 'Data de Nascimento',
       tipoDoadora: 'Tipo de Doadora',
@@ -190,6 +193,9 @@ export const DoadoraUpdate = () => {
     const formatErrors = [];
     if (formData.cpf && !validateCPF(formData.cpf)) {
       formatErrors.push('CPF inválido');
+    }
+    if (formData.cartaoSUS && !validateCartaoSUS(formData.cartaoSUS)) {
+      formatErrors.push('Cartão SUS inválido - deve conter exatamente 15 dígitos');
     }
     if (formData.cep && !validateCEP(formData.cep)) {
       formatErrors.push('CEP inválido');
@@ -235,6 +241,9 @@ export const DoadoraUpdate = () => {
         case 'telefone':
           processedValue = maskPhone(value);
           break;
+        case 'cartaoSUS':
+          processedValue = maskCartaoSUS(value);
+          break;
       }
     }
 
@@ -249,9 +258,6 @@ export const DoadoraUpdate = () => {
         [field]: '',
       }));
     }
-
-    // Remove this setTimeout as we now use useEffect for validation
-    // setTimeout(() => validateForm(false), 100);
   };
 
   const handleCEPBlur = () => {
